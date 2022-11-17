@@ -1,0 +1,54 @@
+#%%
+import os
+import os.path as op
+import pandas as pd
+import numpy as np
+import re
+from scipy.stats import norm
+
+bids_folder = '/Users/mrenke/data/ds-adultnumrisk'
+
+
+df = pd.read_csv(op.join(bids_folder, 'behavior_all_events.tsv'))
+evidSD_subs = pd.read_csv(op.join(bids_folder,'n1-n2-evid-sd_allSubs.tsv'))
+#%%
+d = df
+
+mean_n1 = np.mean(np.log(base_numbers)) # same as np.mean(np.log(d['n1']))
+std_n1 = np.std(np.log(base_numbers))
+
+mean_n2 = np.mean(np.log(d['n2']))
+std_n2 = np.std(np.log(d['n2']))
+
+n2_prior_mu = mean_n2
+n2_prior_sd = std_n2
+
+n1_prior_mu = mean_n1
+n1_prior_sd = std_n1
+
+sim_choices = []
+
+for i in range(0,len(d)):
+        n1_evidence_sd = evidSD_subs['n1_evidence_sd'][evidSD_subs['subject'] == d['subject'][i]]
+        n2_evidence_sd = evidSD_subs['n2_evidence_sd'][evidSD_subs['subject'] == d['subject'][i]]
+        
+        n1_evidence_mu = np.log(d['n1'][i])
+        n2_evidence_mu = np.log(d['n1'][i])
+
+        post_n1_mu, post_n1_sd = get_posterior(n1_prior_mu, 
+                                            n1_prior_sd, 
+                                            n1_evidence_mu,
+                                            n1_evidence_sd)
+
+
+        post_n2_mu, post_n2_sd = get_posterior(n2_prior_mu, 
+                                                n2_prior_sd,
+                                                n2_evidence_mu,
+                                                n2_evidence_sd)
+
+        diff_mu, diff_sd = get_diff_dist(post_n1_mu, post_n1_sd, post_n2_mu, post_n2_sd) # diff = mu2-mu1
+        p = norm.cdf(np.log(1),loc=diff_mu,scale=diff_sd) 
+        sim_choices.append(float(np.random.binomial(1,p))) # choose n2 == 1
+
+
+# %%

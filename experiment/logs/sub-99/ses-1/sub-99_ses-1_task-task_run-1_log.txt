@@ -1,0 +1,105 @@
+0.8279 	WARNING 	The 'psychtoolbox' library cannot be loaded but is required for audio capture (use `pip install psychtoolbox` to get it). Microphone recording will be unavailable this session. Note that opening a microphone stream will raise an error.
+0.9715 	WARNING 	Speech-to-text recognition module for PocketSphinx is not available (use command `pip install SpeechRecognition` to get it). Transcription will be unavailable using that service this session.
+0.9716 	WARNING 	Speech-to-text recognition using Google online services is not available (use command `pip install google-api-core google-auth google-cloud google-cloud-speech googleapis-common-protos` to get it). Transcription will be unavailable using that service this session.
+1.0760 	WARNING 	We strongly recommend you activate the PTB sound engine in PsychoPy prefs as the preferred audio engine. Its timing is vastly superior. Your prefs are currently set to use ['sounddevice', 'PTB', 'pyo', 'pygame'] (in that order).
+2.2991 	WARNING 	Using NO eyetracker
+2.2992 	WARNING 	Using /Users/mrenke/git/numrisk/experiment/settings/macbook.yml as settings
+2.2992 	WARNING 	Writing results to  /Users/mrenke/git/numrisk/experiment/logs/sub-99
+2.2992 	WARNING 	Writing results to: /Users/mrenke/git/numrisk/experiment/logs/sub-99/ses-1/sub-99_ses-1_task-task_run-1_log.txt
+4.7090 	WARNING 	User requested fullscreen with size [1280 1024], but screen is actually [1728, 1117]. Using actual size
+5.6551 	WARNING 	Actual framerate: 60.02081 (1 frame = 0.01666)
+5.7045 	WARNING 	1
+5.7594 	ERROR 	'None' is not a valid color space
+5.7611 	ERROR 	'None' is not a valid color space
+5.7641 	ERROR 	'None' is not a valid color space
+5.7650 	ERROR 	'None' is not a valid color space
+5.7713 	ERROR 	'None' is not a valid color space
+5.7722 	ERROR 	'None' is not a valid color space
+5.7740 	ERROR 	'None' is not a valid color space
+5.7749 	ERROR 	'None' is not a valid color space
+5.7806 	ERROR 	'None' is not a valid color space
+5.7815 	ERROR 	'None' is not a valid color space
+5.7835 	ERROR 	'None' is not a valid color space
+5.7845 	ERROR 	'None' is not a valid color space
+5.7879 	ERROR 	'None' is not a valid color space
+5.7888 	ERROR 	'None' is not a valid color space
+5.7904 	ERROR 	'None' is not a valid color space
+5.7914 	ERROR 	'None' is not a valid color space
+5.7946 	ERROR 	'None' is not a valid color space
+5.7955 	ERROR 	'None' is not a valid color space
+5.7972 	ERROR 	'None' is not a valid color space
+5.7981 	ERROR 	'None' is not a valid color space
+5.8010 	ERROR 	'None' is not a valid color space
+5.8018 	ERROR 	'None' is not a valid color space
+5.8035 	ERROR 	'None' is not a valid color space
+5.8044 	ERROR 	'None' is not a valid color space
+5.8074 	ERROR 	'None' is not a valid color space
+5.8083 	ERROR 	'None' is not a valid color space
+5.8099 	ERROR 	'None' is not a valid color space
+5.8108 	ERROR 	'None' is not a valid color space
+5.8140 	ERROR 	'None' is not a valid color space
+5.8149 	ERROR 	'None' is not a valid color space
+5.8166 	ERROR 	'None' is not a valid color space
+5.8175 	ERROR 	'None' is not a valid color space
+5.8205 	ERROR 	'None' is not a valid color space
+5.8214 	ERROR 	'None' is not a valid color space
+5.8230 	ERROR 	'None' is not a valid color space
+5.8239 	ERROR 	'None' is not a valid color space
+5.8271 	ERROR 	'None' is not a valid color space
+5.8280 	ERROR 	'None' is not a valid color space
+5.8296 	ERROR 	'None' is not a valid color space
+5.8305 	ERROR 	'None' is not a valid color space
+5.8335 	ERROR 	'None' is not a valid color space
+5.8343 	ERROR 	'None' is not a valid color space
+5.8360 	ERROR 	'None' is not a valid color space
+5.8369 	ERROR 	'None' is not a valid color space
+5.8402 	ERROR 	'None' is not a valid color space
+5.8411 	ERROR 	'None' is not a valid color space
+5.8427 	ERROR 	'None' is not a valid color space
+5.8440 	ERROR 	'None' is not a valid color space
+5.8526 	ERROR 	'None' is not a valid color space
+5.8536 	ERROR 	'None' is not a valid color space
+5.8560 	ERROR 	'None' is not a valid color space
+5.8568 	ERROR 	'None' is not a valid color space
+5.8600 	ERROR 	'None' is not a valid color space
+5.8609 	ERROR 	'None' is not a valid color space
+5.8625 	ERROR 	'None' is not a valid color space
+5.8634 	ERROR 	'None' is not a valid color space
+5.8663 	ERROR 	'None' is not a valid color space
+5.8672 	ERROR 	'None' is not a valid color space
+5.8688 	ERROR 	'None' is not a valid color space
+5.8697 	ERROR 	'None' is not a valid color space
+5.8727 	ERROR 	'None' is not a valid color space
+5.8736 	ERROR 	'None' is not a valid color space
+5.8752 	ERROR 	'None' is not a valid color space
+5.8761 	ERROR 	'None' is not a valid color space
+5.8791 	ERROR 	'None' is not a valid color space
+5.8800 	ERROR 	'None' is not a valid color space
+5.8817 	ERROR 	'None' is not a valid color space
+5.8825 	ERROR 	'None' is not a valid color space
+5.8858 	ERROR 	'None' is not a valid color space
+5.8867 	ERROR 	'None' is not a valid color space
+5.8884 	ERROR 	'None' is not a valid color space
+5.8892 	ERROR 	'None' is not a valid color space
+5.8924 	ERROR 	'None' is not a valid color space
+5.8933 	ERROR 	'None' is not a valid color space
+5.8950 	ERROR 	'None' is not a valid color space
+5.8958 	ERROR 	'None' is not a valid color space
+5.8989 	ERROR 	'None' is not a valid color space
+5.8998 	ERROR 	'None' is not a valid color space
+5.9014 	ERROR 	'None' is not a valid color space
+5.9022 	ERROR 	'None' is not a valid color space
+5.9051 	ERROR 	'None' is not a valid color space
+5.9060 	ERROR 	'None' is not a valid color space
+5.9076 	ERROR 	'None' is not a valid color space
+5.9085 	ERROR 	'None' is not a valid color space
+5.9116 	ERROR 	'None' is not a valid color space
+5.9126 	ERROR 	'None' is not a valid color space
+5.9142 	ERROR 	'None' is not a valid color space
+5.9150 	ERROR 	'None' is not a valid color space
+5.9227 	WARNING 	Writing results to: /Users/mrenke/git/numrisk/experiment/logs/sub-99/ses-1/sub-99_ses-1_task-task_run-1
+6.9770 	WARNING 	t of last frame was 21.85ms (=1/45)
+7.2935 	WARNING 	t of last frame was 20.56ms (=1/48)
+7.3251 	WARNING 	t of last frame was 20.45ms (=1/48)
+7.4100 	WARNING 	t of last frame was 70.20ms (=1/14)
+15.3723 	WARNING 	Multiple dropped frames have occurred - I'll stop bothering you about them!

@@ -1,0 +1,17 @@
+2.0913 	WARNING 	The 'psychtoolbox' library cannot be loaded but is required for audio capture (use `pip install psychtoolbox` to get it). Microphone recording will be unavailable this session. Note that opening a microphone stream will raise an error.
+2.3391 	WARNING 	Speech-to-text recognition module for PocketSphinx is not available (use command `pip install SpeechRecognition` to get it). Transcription will be unavailable using that service this session.
+2.3392 	WARNING 	Speech-to-text recognition using Google online services is not available (use command `pip install google-api-core google-auth google-cloud google-cloud-speech googleapis-common-protos` to get it). Transcription will be unavailable using that service this session.
+2.4766 	WARNING 	We strongly recommend you activate the PTB sound engine in PsychoPy prefs as the preferred audio engine. Its timing is vastly superior. Your prefs are currently set to use ['sounddevice', 'PTB', 'pyo', 'pygame'] (in that order).
+5.6355 	WARNING 	Using NO eyetracker
+5.6355 	WARNING 	Using /Users/mrenke/git/numrisk/experiment/settings/macbook.yml as settings
+5.6355 	WARNING 	Writing results to  /Users/mrenke/git/numrisk/experiment/logs/sub-99
+5.6355 	WARNING 	Writing results to: /Users/mrenke/git/numrisk/experiment/logs/sub-99/ses-1/sub-99_ses-1_task-risk_run-1_log.txt
+7.9518 	WARNING 	User requested fullscreen with size [1280 1024], but screen is actually [1728, 1117]. Using actual size
+9.0325 	WARNING 	Actual framerate: 59.97492 (1 frame = 0.01667)
+9.1016 	WARNING 	1
+9.2167 	WARNING 	Writing results to: /Users/mrenke/git/numrisk/experiment/logs/sub-99/ses-1/sub-99_ses-1_task-risk_run-1
+16.7968 	WARNING 	t of last frame was 23.10ms (=1/43)
+26.6027 	WARNING 	t of last frame was 20.63ms (=1/48)
+35.2467 	WARNING 	t of last frame was 23.22ms (=1/43)
+48.7962 	WARNING 	t of last frame was 22.68ms (=1/44)
+58.4543 	WARNING 	Multiple dropped frames have occurred - I'll stop bothering you about them!
