@@ -97,16 +97,12 @@ class TaskInstructionTrial(InstructionTrial):
             This is run {run}/6.
 
             In this task, you will see two piles of Swiss Franc coins in
-            succession. Both piles are combined with a pie chart in.
-            The part of the pie chart that is lightly colored indicates
-            the probability of a lottery you will gain the amount of
-            Swiss Francs represented by the pile.
+            succession. 
 
-            Your task is to either select the first lottery or
-            the second lottery, by using your index or ring finger.
+            Your task is to decide which pile is larger, by using your index (pile 1) or ring (pile 2) finger.
 
             NOTE: if you are to late in responding, or you do not 
-            respond. You will gain no money for that trial.
+            respond. 
 
             Take some time to take a break between runs if you want to.
 
