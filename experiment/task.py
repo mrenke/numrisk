@@ -1,18 +1,24 @@
-from exptools2.core import Session
+# task.py from stressrisk/experiment modified
+
+# run like:  python task.py 99 1 1 --settings macbook 
+
+from exptools2.core import Session # installed, Gilles version
 from exptools2.core import Trial
-from gamble import IntroBlockTrial, GambleTrial
-from utils import run_experiment, create_stimulus_array_log_df
 from psychopy import logging
-from session import PileSession
 import numpy as np
-from trial import InstructionTrial, DummyWaiterTrial, OutroTrial
 import os
 import os.path as op
 import pandas as pd
 
+from utils import run_experiment  # in folder
+from psychopy import logging # in folder
+from session import PileSession  # in folder
+from trial import InstructionTrial, DummyWaiterTrial, OutroTrial # in folder
+from trial_magJudge import IntroBlockTrial,MagJudgeTrial
+
 class TaskSession(PileSession):
 
-    Trial = GambleTrial
+    Trial = MagJudgeTrial
 
     def __init__(self, output_str, subject=None, output_dir=None, settings_file=None, run=None, eyetracker_on=False):
         print(settings_file)
@@ -24,7 +30,7 @@ class TaskSession(PileSession):
     def create_trials(self):
         task_settings_folder = op.abspath(op.join('settings', 'task'))
         fn = op.abspath(op.join(task_settings_folder,
-                                f'sub-{self.subject}_ses-task.tsv'))
+                                f'sub-{self.subject}_ses_task-magJudge.tsv'))
 
         settings = pd.read_table(fn)
 
@@ -56,23 +62,15 @@ class TaskSession(PileSession):
             self.trials.append(TaskInstructionTrial(self, trial_nr=run,
                                                       n_runs=self.n_runs,
                                                       run=run))
-            for (p1, p2), d2 in d.groupby(['p1', 'p2'], sort=False):
-                n_trials_in_miniblock = len(d2)
-                self.trials.append(IntroBlockTrial(session=self, trial_nr=0,
-                                                   n_trials=n_trials_in_miniblock,
-                                                   prob1=p1,
-                                                   prob2=p2))
+            # deleted
+            for ix, row in d.iterrows():
+                self.trials.append(MagJudgeTrial(self, row.trial,
+                                                num1=int(row.n1),
+                                                num2=int(row.n2),
+                                                jitter1=row.jitter1,
+                                                jitter2=row.jitter2))
 
-
-                for ix, row in d2.iterrows():
-                    self.trials.append(GambleTrial(self, row.trial,
-                                                   prob1=row.p1, prob2=row.p2,
-                                                   num1=int(row.n1),
-                                                   num2=int(row.n2),
-                                                   jitter1=row.jitter1,
-                                                   jitter2=row.jitter2))
-
-        
+    
         outro_trial = OutroTrial(session=self, trial_nr=row.trial+1,
                                        phase_durations=[np.inf])
         self.trials.append(outro_trial)
@@ -84,9 +82,9 @@ class TaskSessionMRI(TaskSession):
         super().create_trials()
 
         n_dummies = self.settings['mri'].get('n_dummy_scans')
-         # added `exit_phase` in experiment/trial.py.DummyWaiterTrial to make it work on computer
+        # added `exit_phase` here to make it work on computer
         self.trials.insert(1, DummyWaiterTrial(session=self, n_triggers=n_dummies, trial_nr=0))
-
+        # in ./trial.py ....get_events() --> exptools2/core/trial.py --> 
         self.trials.append(OutroTrial(self, -1, phase_durations=[np.inf]))
 
 class TaskInstructionTrial(InstructionTrial):
@@ -118,7 +116,10 @@ class TaskInstructionTrial(InstructionTrial):
 
         super().__init__(session=session, trial_nr=trial_nr, phase_durations=phase_durations, txt=txt, **kwargs)
 
+
 if __name__ == '__main__':
+    
+   # run  
     session_cls = TaskSessionMRI
-    task = 'task'
+    task = 'risk'
     run_experiment(session_cls, task=task)
