@@ -11,6 +11,7 @@ bids_folder = '/Users/mrenke/data/ds-adultnumrisk'
 
 df = pd.read_csv(op.join(bids_folder, 'behavior_all_events.tsv'))
 evidSD_subs = pd.read_csv(op.join(bids_folder,'n1-n2-evid-sd_allSubs.tsv'))
+
 #%%
 d = df
 
@@ -48,7 +49,19 @@ for i in range(0,len(d)):
 
         diff_mu, diff_sd = get_diff_dist(post_n1_mu, post_n1_sd, post_n2_mu, post_n2_sd) # diff = mu2-mu1
         p = norm.cdf(np.log(1),loc=diff_mu,scale=diff_sd) 
-        sim_choices.append(float(np.random.binomial(1,p))) # choose n2 == 1
+        sim_choices.append(float(np.random.binomial(1,p))) # choose n1 == 1
 
 
+# %%
+df['sim_choices']= sim_choices
+df['sim_choices']= -(np.array(sim_choices) - 2) # have the same code as choices 1--> 0 (n1), 0 --> 2 (n2)
+# %%
+df['choice_']=d['choice'] -1 # choose n2 = 1
+df['log_ratio_']= - d['log_ratio'] # d['log_ratio'] == df_cl['n1']/df_cl['n2']  
+
+fac = sns.lmplot(x='log_ratio_', y='choice_',  col='subject', data=df, logistic=True) #hue='risky_first',
+
+for ax in fac.axes.ravel():
+    ax.axhline(.5, c='k', ls='--')
+    ax.axvline(np.log(1), c='k', ls='--')
 # %%

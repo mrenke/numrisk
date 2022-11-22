@@ -143,8 +143,8 @@ def create_design_magJudge(fractions, base=[5, 7, 10, 14, 20, 28], repetitions=1
     df['n1'] = df['n1'].astype(int)
     df['n2'] = df['n2'].astype(int)
 
-    for ix, row in df.iterrows():
-        if df['n1']==df['n2']:
+    #for ix, row in df.iterrows():
+        #if df['n1']==df['n2']:
             
     # problem : len(df[df['n1']==df['n2']]) = 25
     # Shuffle

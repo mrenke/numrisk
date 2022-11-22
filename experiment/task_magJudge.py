@@ -1,4 +1,7 @@
 #%%
+
+
+#%%
 from exptools2.core import Session # installed, Gilles version
 from exptools2.core import Trial
 from psychopy import logging
@@ -7,7 +10,7 @@ import os
 import os.path as op
 import pandas as pd
 
-from utils import run_experiment, create_stimulus_array_log_df  # in folder
+from utils import run_experiment  # in folder
 from psychopy import logging # in folder
 from session import PileSession  # in folder
 from trial import InstructionTrial, DummyWaiterTrial, OutroTrial # in folder
