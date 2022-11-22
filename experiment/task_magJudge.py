@@ -1,7 +1,7 @@
-#%%
+# task.py from stressrisk/experiment modified
 
+# run like:  python task_magJudge.py 99 1 1 --settings macbook 
 
-#%%
 from exptools2.core import Session # installed, Gilles version
 from exptools2.core import Trial
 from psychopy import logging
@@ -130,12 +130,14 @@ if __name__ == '__main__':
 
     fn = op.abspath(op.join(task_settings_folder,
                             f'sub-{subject}_ses_task-magJudge.tsv'))
-    x_lower = 0.6
-    x_upper = 1.2                      
-    fractions = np.exp(np.linspace(np.log(x_lower), np.log(x_upper), 6, True)) # len = 6
-    base = np.array([7, 10, 14, 20, 28])
 
-    df = create_design_magJudge(fractions, base=base, repetitions=2, n_runs=6)
+    frac = np.linspace(-6,6, 13)
+    frac = np.delete(frac, 6)                     
+    fractions = np.power(2,(frac/4))
+
+    base = np.array([5, 7, 10, 14, 20])
+
+    df = create_design_magJudge(fractions, base=base, repetitions=3, n_runs=10)
     print(df)
     df.to_csv(fn, sep='\t')
     
