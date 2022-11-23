@@ -51,7 +51,7 @@ class MagJudgeTrial(Trial):
         if phase_durations is None:
             # 0 1 2 3 4 5 6 7 8 9 --> delete 2 & 6 (piecharts)
             #phase_durations = [.25, .3, .3, .5, .6, jitter1, .3, .3, .6, jitter2]
-            phase_durations = [.25, .3, .5, .6, jitter1,  .3, .6, jitter2]
+            phase_durations = [.25, .75,  .6, jitter1, .6, jitter2]
         elif len(phase_durations) == 12:
             phase_durations = phase_durations
         else:
@@ -99,16 +99,12 @@ class MagJudgeTrial(Trial):
             self.session.fixation_lines.setColor((-1, 1, -1))
         elif self.phase == 1:
             self.session.fixation_lines.setColor((1, -1, -1))
-        #elif self.phase == 2:
-            #self.piechart1.draw()
-        elif self.phase == 3:
+        elif self.phase == 2:
             self.pile1.draw()
-        #elif self.phase == 6:
-            #self.piechart2.draw()
-        elif self.phase == 6:
+        elif self.phase == 4:
             self.pile2.draw()
 
-        if self.phase == 7:
+        if self.phase == 5:
             if self.choice is not None:
                 if (self.session.clock.getTime() - self.choice_time) < .5:
                     self.choice_stim.draw()
@@ -121,7 +117,7 @@ class MagJudgeTrial(Trial):
                 self.last_key_responses[key] = t - 0.6
 
             if t - self.last_key_responses[key] > 0.5:
-                if self.phase > 5: ## !!!!
+                if self.phase > 3: ## !!!!
                     if self.choice is None:
                         if key in [self.buttons[0], self.buttons[1]]:
                             self.choice_time = self.session.clock.getTime()
@@ -129,7 +125,7 @@ class MagJudgeTrial(Trial):
                                 self.choice = 1
                             elif key == self.buttons[1]:
                                 self.choice = 2
-                            self.choice_stim.text = f'You chose pile {self.choice}'
+                            self.choice_stim.text = f'{self.choice}'
 
                             self.log(choice=self.choice)
 
