@@ -51,8 +51,7 @@ class DummyWaiterTrial(InstructionTrial):
 
     def get_events(self):
         events = Trial.get_events(self)
-        ## !!!
-        self.stop_phase() ##
+
         ##
         if events:
             for key, t in events:
