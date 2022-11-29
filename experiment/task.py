@@ -94,7 +94,7 @@ class TaskInstructionTrial(InstructionTrial):
 
         if txt is None:
             txt = f"""
-            This is run {run}/6.
+            This is run {run}/10.
 
             In this task, you will see two piles of Swiss Franc coins in
             succession. 
