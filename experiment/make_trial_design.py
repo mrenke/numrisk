@@ -26,7 +26,7 @@ def main(subject, session=None, run=None):
 
     base = np.array([5, 7, 10, 14, 20])
 
-    df = create_design_magJudge(fractions, base=base, repetitions=3, n_runs=10)
+    df = create_design_magJudge(fractions, base=base, repetitions=3, n_runs= 6)
     print(df)
     df.to_csv(fn, sep='\t')
 
