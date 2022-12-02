@@ -39,8 +39,13 @@ class GambleTrial(Trial):
         y_pos = -1
         pile1_pos = center_l, y_pos
         pile2_pos = center_r, y_pos
-        circle_radius = 2.5 # self.session.settings['pile'].get('aperture_radius')
-        dot_radius = 0.2 # self.session.settings['pile'].get('dot_radius')
+
+        screen_adj_factor = 2
+        circle_radius = self.session.settings['pile'].get('aperture_radius')
+        circle_radius = circle_radius/screen_adj_factor
+        dot_radius = self.session.settings['pile'].get('dot_radius')
+        dot_radius = dot_radius/screen_adj_factor
+
         self.pile1 = _create_stimulus_array(self.session.win,
                                             num1,
                                             circle_radius,

@@ -51,7 +51,9 @@ def makeDesign(subject, session=None):
 
     print(x_lower, x_upper)
 
-    fractions = np.exp(np.linspace(np.log(x_lower), np.log(x_upper), 6, True))
+    frac = np.linspace(1,8,8)                     
+    fractions = np.power(2,(frac/4))
+
     base = np.array([7, 10, 14, 20, 28])
     prob1 = [1., .55]
     prob2 = [.55, 1.]
