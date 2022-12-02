@@ -7,7 +7,7 @@ from psychopy import logging
 from itertools import product
 import yaml
 
-def run_experiment(session_cls, task, use_runs=False, subject=None, session=None, run=None, settings='default', n_runs=4, *args, **kwargs):
+def run_experiment(session_cls, task, use_runs=True, subject=None, session=None, run=None, settings='default', n_runs=6, *args, **kwargs):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=subject, nargs='?')
@@ -15,6 +15,7 @@ def run_experiment(session_cls, task, use_runs=False, subject=None, session=None
     parser.add_argument('run', default=run, nargs='?')
     parser.add_argument('--settings', default=settings, nargs='?')
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--speedup', action='store_true')
     cmd_args = parser.parse_args()
     subject, session, run, settings = cmd_args.subject, cmd_args.session, cmd_args.run, cmd_args.settings
 
@@ -64,12 +65,15 @@ def run_experiment(session_cls, task, use_runs=False, subject=None, session=None
             overwrite = input(
                 f'{log_file} already exists! Are you sure you want to continue? ')
             if overwrite != 'y':
-                raise Exception('Run cancelled: file already exists') 
+                raise Exception('Run cancelled: file already exists')
+        #if (not cmd_args.
         session_object = session_cls(output_str=output_str,
                               output_dir=output_dir,
                               settings_file=settings_fn, subject=subject,
                               run=run,
-                              eyetracker_on=eyetracker_on, *args, **kwargs)
+                              eyetracker_on=eyetracker_on,
+                              speedup = cmd_args.speedup, # stores as defualt False if not given??
+                               *args, **kwargs)
         session_object.create_trials()
         logging.warn(f'Writing results to: {op.join(session_object.output_dir, session_object.output_str)}')
         session_object.run()

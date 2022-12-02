@@ -14,14 +14,15 @@ from utils import run_experiment  # in folder
 from psychopy import logging # in folder
 from session import PileSession  # in folder
 from trial import InstructionTrial, DummyWaiterTrial, OutroTrial # in folder
-from trial_magJudge import IntroBlockTrial,MagJudgeTrial
+from trial_magJudge import MagJudgeTrial
 
 class TaskSession(PileSession):
 
-    Trial = MagJudgeTrial
+    #Trial = MagJudgeTrial
 
-    def __init__(self, output_str, subject=None, output_dir=None, settings_file=None, run=None, eyetracker_on=False):
+    def __init__(self, output_str, subject=None, output_dir=None, settings_file=None, run=None, speedup = False, eyetracker_on=False):
         print(settings_file)
+        self.speedup = speedup
         super().__init__(output_str, subject=subject,
                          output_dir=output_dir, settings_file=settings_file, run=run, eyetracker_on=eyetracker_on)
 
@@ -60,7 +61,7 @@ class TaskSession(PileSession):
 
         for run, d in settings.groupby(['run'], sort=False):
             self.trials.append(TaskInstructionTrial(self, trial_nr=run,
-                                                      n_runs=self.n_runs,
+                                                      #n_runs=self.n_runs,
                                                       run=run))
             # deleted
             for ix, row in d.iterrows():
@@ -68,7 +69,8 @@ class TaskSession(PileSession):
                                                 num1=int(row.n1),
                                                 num2=int(row.n2),
                                                 jitter1=row.jitter1,
-                                                jitter2=row.jitter2))
+                                                jitter2=row.jitter2,
+                                                speedup = self.speedup))
 
     
         outro_trial = OutroTrial(session=self, trial_nr=row.trial+1,
@@ -89,17 +91,17 @@ class TaskSessionMRI(TaskSession):
 
 class TaskInstructionTrial(InstructionTrial):
     
-    def __init__(self, session, trial_nr, run, txt=None, n_runs=3, phase_durations=[np.inf],
+    def __init__(self, session, trial_nr, run, txt=None, n_runs=6, phase_durations=[np.inf],
                  **kwargs):
 
         if txt is None:
             txt = f"""
-            This is run {run}/10.
+            This is run {run}/{n_runs}
 
             In this task, you will see two piles of Swiss Franc coins in
             succession. 
 
-            Your task is to decide which pile is larger, by using your index (pile 1) or ring (pile 2) finger.
+            Your task is to decide which pile is larger, by using your index (pile 1) or middle (pile 2) finger.
 
             NOTE: if you are to late in responding, or you do not 
             respond. 

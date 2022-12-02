@@ -8,45 +8,13 @@ import os.path as op
 import pandas as pd
 from trial import InstructionTrial
 
-class IntroBlockTrial(Trial):
-
-    def __init__(self, session, trial_nr, phase_durations=[5.],
-                 prob1=0.55, prob2=1.0, n_trials=16, **kwargs):
-        super().__init__(session, trial_nr, phase_durations, **kwargs)
-
-        txt = f"""
-        In this block of {n_trials} trials, the first option will have a
-        winning chance of {int(prob1*100):d}%.\n\n
-        The second option will have a winning chance of {int(prob2*100):d}%.
-        """
-
-        text_width = self.session.settings['various'].get('text_width')
-        text_height = self.session.settings['various'].get('text_height')
-        piechart_width = self.session.settings['various'].get('piechart_width')
-
-        piechart_pos1 = .5 * -text_width - .25 * piechart_width, 1.5 * piechart_width
-        piechart_pos2 = .5 * -text_width - .25 * piechart_width, -1.5 * piechart_width
-
-        self.piechart1 = ProbabilityPieChart(
-            self.session.win, prob1, pos=piechart_pos1, size=piechart_width)
-        self.piechart2 = ProbabilityPieChart(
-            self.session.win, prob2, pos=piechart_pos2, size=piechart_width)
-
-        self.text = TextStim(self.session.win, txt,
-                             wrapWidth=text_width,
-                             height=text_height)
-
-    def draw(self):
-        self.text.draw()
-        self.piechart1.draw()
-        self.piechart2.draw()
-
-#-------------------------------------------------------------------------------------------
 
 class MagJudgeTrial(Trial):
     def __init__(self, session, trial_nr, phase_durations=None,
                  num1=10, num2=5,
-                 jitter1=2.5, jitter2=4.0, **kwargs):
+                 jitter1=2.5, jitter2=4.0,
+                 speedup = False, 
+                 **kwargs):
 
         if phase_durations is None:
             # 0 1 2 3 4 5 6 7 8 9 --> delete 2 & 6 (piecharts)
@@ -58,6 +26,9 @@ class MagJudgeTrial(Trial):
             raise Exception(
                 "Don't directly set phase_durations for GambleTrial!")
 
+        if speedup:
+            phase_durations = [.25, .75,  .6, 1, .6, 2]
+            
         super().__init__(session, trial_nr, phase_durations, **kwargs)
 
         self.parameters['n1'] = num1
