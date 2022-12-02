@@ -7,15 +7,17 @@ import yaml
 from psychopy import logging
 import os.path as op
 
-def run_experiment(session_cls, task, subject=None, session=None, settings='default', n_runs=4, *args, **kwargs):
+def run_experiment(session_cls, task, subject=None, session=None, settings='default', n_breaks = 64,  *args, **kwargs):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=subject, nargs='?')
     parser.add_argument('session', default=session, nargs='?')
     parser.add_argument('--settings', default=settings, nargs='?')
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--format', default='non-symbolic')
+
     cmd_args = parser.parse_args()
-    subject, session, settings = cmd_args.subject, cmd_args.session, cmd_args.settings
+    subject, session, settings, format = cmd_args.subject, cmd_args.session, cmd_args.settings, cmd_args.format
 
 
     if subject is None:
@@ -56,6 +58,8 @@ def run_experiment(session_cls, task, subject=None, session=None, settings='defa
                             output_dir=output_dir,
                             settings_file=settings_fn, subject=subject,
     #                        eyetracker_on=eyetracker_on, 
+                            format = format,
+                            n_breaks = n_breaks,
                             *args, **kwargs)
     
     # run 

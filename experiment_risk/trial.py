@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class GambleTrial(Trial):
-    def __init__(self, session, trial_nr, phase_durations=None,
+    def __init__(self, session, trial_nr, phase_durations=None, format = 'non-symbolic',
                  prob1=0.55, prob2=1.0, num1=10, num2=5,**kwargs):
 
         if phase_durations is None:
@@ -15,6 +15,8 @@ class GambleTrial(Trial):
 
         super().__init__(session, trial_nr, phase_durations, **kwargs)
 
+        self.trial_nr = trial_nr
+        
         self.parameters['prob1'] = prob1
         self.parameters['prob2'] = prob2
 
@@ -44,21 +46,41 @@ class GambleTrial(Trial):
         circle_radius = self.session.settings['pile'].get('aperture_radius')
         circle_radius = circle_radius/screen_adj_factor
         dot_radius = self.session.settings['pile'].get('dot_radius')
-        dot_radius = dot_radius/screen_adj_factor
+        dot_radius = dot_radius/2
 
-        self.pile1 = _create_stimulus_array(self.session.win,
-                                            num1,
-                                            circle_radius,
-                                            dot_radius,
-                                            pos=pile1_pos,
-                                            image=self.session.image1)
+        if format == 'non-symbolic':
 
-        self.pile2 = _create_stimulus_array(self.session.win,
-                                            num2,
-                                            circle_radius,
-                                            dot_radius,
-                                            pos=pile2_pos,
-                                            image=self.session.image1)
+
+            self.pile1 = _create_stimulus_array(self.session.win,
+                                                num1,
+                                                circle_radius,
+                                                dot_radius,
+                                                pos=pile1_pos,
+                                                image=self.session.image1)
+
+            self.pile2 = _create_stimulus_array(self.session.win,
+                                                num2,
+                                                circle_radius,
+                                                dot_radius,
+                                                pos=pile2_pos,
+                                                image=self.session.image1)
+        elif format == 'symbolic':
+            screen_adj_factor = screen_adj_factor / 2
+            self.pile1 = TextStim(self.session.win,
+                                    text = f'{num1}',
+                                    pos=pile1_pos,
+                                    height=screen_adj_factor,
+                                    wrapWidth=screen_adj_factor,
+                                    color=(-1, -1, -1)
+                                    )
+            self.pile2 = TextStim(self.session.win,
+                                    text = f'{num2}',
+                                    pos=pile2_pos,
+                                    height=screen_adj_factor,
+                                    wrapWidth=screen_adj_factor,
+                                    color=(-1, -1, -1)
+                                    )
+
 
         self.circle1 = Circle(self.session.win, radius = circle_radius + 2, pos = pile1_pos, lineColor= 'white' , fillColor = None, lineWidth = 4 )
         self.circle2 = Circle(self.session.win, radius = circle_radius + 2, pos = pile2_pos, lineColor= 'white' , fillColor = None, lineWidth = 4 )
