@@ -7,7 +7,7 @@ import yaml
 from psychopy import logging
 import os.path as op
 
-def run_experiment(session_cls, task, subject=None, session=None, settings='default', n_breaks = 64,  *args, **kwargs):
+def run_experiment(session_cls, task, subject=None, session=None, settings='default', n_breaks = 4,  *args, **kwargs):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=subject, nargs='?')
