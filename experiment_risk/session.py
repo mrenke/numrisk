@@ -22,6 +22,7 @@ class RiskPileSession(Session):
 
         self.format = format
         self.n_breaks = n_breaks
+        self.Trial = GambleTrial
 
     def create_trials(self):
 
