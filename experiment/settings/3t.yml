@@ -70,7 +70,5 @@ various:
   piechart_width: 1 
   text_width: 14
   text_height: .5
-  buttons: ['4', '2']
+  buttons: ['3', '1']
   button_size: 2
-
-
