@@ -77,13 +77,16 @@ class BreakPhase(Trial):
                 take as much time as you want,
                 just press any button to continue.   
                 """
+        txt_height = self.session.settings['various'].get('text_height')
+        txt_width = self.session.settings['various'].get('text_width')
 
         self.text = TextStim(self.session.win,
                                     text = text,
+                                    height=txt_height, wrapWidth=txt_width,
                                     pos= (0,0),
-                                    height=0.5,
-                                    wrapWidth=0.5,
-                                    color=(-1, -1, -1)
+                                    #height=0.5,
+                                    #wrapWidth=0.5,
+                                    color=(1, 1, 1)
                                     )
     def draw(self):
         if self.phase == 0:

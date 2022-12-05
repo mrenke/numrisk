@@ -45,7 +45,7 @@ class Session:
 
     def _load_settings(self):
         """ Loads settings and sets preferences. """
-          
+
         with open(self.settings_file, 'r', encoding='utf8') as f_in:   
             settings = yaml.safe_load(f_in)
         
@@ -85,6 +85,74 @@ class Session:
         logging.warn(f"Actual framerate: {self.actual_framerate:.5f} "
                      f"(1 frame = {t_per_frame:.5f})")
         return win
+    def _set_exp_stop(self):
+        """ Called on last win.flip(); timestamps end of exp. """
+        self.exp_stop = self.clock.getTime()
+
+
+
 # %%
-settings_fn = op.join('/Users/mrenke/git/numrisk/experiment_risk/make_design.py', 'settings', 'macbook.yml')
+from stimuli import _create_stimulus_array, CertaintyStimulus, ProbabilityPieChart
+import os.path as op
+
+settings_fn = op.join('/Users/mrenke/git/numrisk/experiment_risk/', 'settings', 'macbook.yml')
+
+toy = Session(settings_file = settings_fn,output_str = '.tsv' )
+core.quit()
+
+piechart_pos1 = 0.2 , 0.2
+#piechart_pos2 = .5 * -text_width - .25 * piechart_width, -1.5 * piechart_width
+piechart_width = 1
+piechart1 = ProbabilityPieChart(toy.win, prob1 = 0.55, pos=piechart_pos1, size= piechart_width)
+piechart1.draw()
+
+
+
+# %%
+from psychopy import visual, core
+from stimuli import ProbabilityPieChart
+
+win = visual.Window([400,400])
+
+piechart_pos1 = 0.2 , 0.2
+piechart_width = 1
+prob1 = 0.55
+piechart1 = ProbabilityPieChart(win, prob1, pos=piechart_pos1, size= piechart_width)
+
+
+
+message = visual.TextStim(win, text='hello')
+message.autoDraw = True  # Automatically draw every frame
+win.flip()
+core.wait(2.0)
+message.text = 'world'  # Change properties of existing stim
+win.flip()
+core.wait(2.0)
+piechart1.draw()
+win.flip()
+core.wait(2.0)
+win.close()
+
+
+
+# %%
+win = visual.Window([400,400], monitor = 1)
+message = visual.TextStim(win, text='hello')
+win.flip()
+core.wait(2.0)
+win.close()
+
+# %%
+import yaml
+import os.path as op
+from psychopy.monitors import Monitor
+
+
+settings_fn = op.join('/Users/mrenke/git/numrisk/experiment_risk/', 'settings', 'macbook.yml')
+settings = yaml.safe_load(settings_fn)
+monitor = Monitor(settings['monitor'])
+
+# %%
+import os
+
 # %%

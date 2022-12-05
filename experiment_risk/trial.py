@@ -71,19 +71,19 @@ class GambleTrial(Trial):
                                     pos=pile1_pos,
                                     height=screen_adj_factor,
                                     wrapWidth=screen_adj_factor,
-                                    color=(-1, -1, -1)
+                                    color=(1, 1, 1)
                                     )
             self.pile2 = TextStim(self.session.win,
                                     text = f'{num2}',
                                     pos=pile2_pos,
                                     height=screen_adj_factor,
                                     wrapWidth=screen_adj_factor,
-                                    color=(-1, -1, -1)
+                                    color=(1, 1, 1)
                                     )
 
 
-        self.circle1 = Circle(self.session.win, radius = circle_radius + 2, pos = pile1_pos, lineColor= 'white' , fillColor = None, lineWidth = 4 )
-        self.circle2 = Circle(self.session.win, radius = circle_radius + 2, pos = pile2_pos, lineColor= 'white' , fillColor = None, lineWidth = 4 )
+        self.circle1 = Circle(self.session.win, radius = circle_radius * 1.2, pos = pile1_pos, lineColor= 'white' , fillColor = None, lineWidth = 4 )
+        self.circle2 = Circle(self.session.win, radius = circle_radius * 1.2, pos = pile2_pos, lineColor= 'white' , fillColor = None, lineWidth = 4 )
 
         self.fixation_cross = TextStim(self.session.win, '+', color=(1., 1., 1.), pos = (0,y_pos))
 

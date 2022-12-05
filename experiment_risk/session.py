@@ -23,6 +23,7 @@ class RiskPileSession(Session):
         self.format = format
         self.n_breaks = n_breaks
         self.Trial = GambleTrial
+        print(n_breaks)
 
     def create_trials(self):
 
@@ -54,7 +55,7 @@ class RiskPileSession(Session):
         n_breaks = self.n_breaks
         for trial in self.trials:
             trial.run()
-            if (trial.trial_nr+1 % (len(self.trials)/n_breaks)) == 0 : 
+            if (trial.trial_nr % (len(self.trials)/n_breaks)) == 0 : 
                 # len(self.trials)/self.n_breaks:
                 break_n += 1
                 b = BreakPhase(self,break_n,n_breaks)
