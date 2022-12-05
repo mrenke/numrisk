@@ -3,9 +3,11 @@ from psychopy import visual, logging
 import pandas as pd
 import os.path as op
 from psychopy import visual, logging
-from trial import GambleTrial
+from trial import GambleTrial, InstructionTrial
 from make_design import makeDesign
 from utils import BreakPhase
+import numpy as np
+
 
 class RiskPileSession(Session):
     """ Simple session with x trials. """
@@ -32,6 +34,7 @@ class RiskPileSession(Session):
 
         settings = pd.read_table(fn)
         self.trials = []
+        
         for ix, row in settings.iterrows():
             self.trials.append(GambleTrial(self, row.trial, # self = session !
                                             prob1=row.p1, prob2=row.p2,
@@ -43,12 +46,14 @@ class RiskPileSession(Session):
 
     def run(self):
         self.start_experiment()
+        s = TaskInstructionTrial(self, trial_nr=0)
+        s.run()
 
         break_n = 0
         n_breaks = self.n_breaks
         for trial in self.trials:
             trial.run()
-            if (trial.trial_nr % (len(self.trials)/n_breaks)) == 0 : 
+            if (trial.trial_nr+1 % (len(self.trials)/n_breaks)) == 0 : 
                 # len(self.trials)/self.n_breaks:
                 break_n += 1
                 b = BreakPhase(self,break_n,n_breaks)
@@ -72,3 +77,30 @@ class RiskPileSession(Session):
 
             array_log.to_csv(op.join(
                 self.output_dir, self.output_str + '_stimarray_locations.tsv'), sep='\t')
+
+
+class TaskInstructionTrial(InstructionTrial):
+    
+    def __init__(self, session, trial_nr, txt=None, phase_durations=[np.inf],
+                 **kwargs):
+
+        if txt is None:
+            txt = f"""
+
+            In this task, you will see two piles of Swiss Franc coins next to each other.
+            Both piles are combined with a pie chart.
+            The part of the pie chart that is lightly colored indicates
+            the probability of a lottery you will gain the amount of
+            Swiss Francs represented by the pile.
+            Your task is to either select the left or the right lottery, by using your index (pile 1) or middle (pile 2) finger.
+
+            NOTE: if you are to late in responding, or you do not 
+            respond, you will gain no money for that trial. 
+
+            There will be some breaks in between for which you can take as much time as you want.
+
+            Press any of your buttons to continue.
+
+            """
+
+        super().__init__(session=session, trial_nr=trial_nr, phase_durations=phase_durations, txt=txt, **kwargs)

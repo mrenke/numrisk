@@ -168,3 +168,36 @@ class GambleTrial(Trial):
             self.session.global_log.loc[idx, 'event_type'] = 'choice'
             self.session.global_log.loc[idx, 'choice'] = choice
 
+
+class InstructionTrial(Trial):
+    """ Simple trial with instruction text. """
+
+    def __init__(self, session, trial_nr, phase_durations=[np.inf],
+                 txt=None, keys=None, **kwargs):
+
+        super().__init__(session, trial_nr, phase_durations, **kwargs)
+
+        txt_height = self.session.settings['various'].get('text_height')
+        txt_width = self.session.settings['various'].get('text_width')
+
+        if txt is None:
+            txt = '''Pess any button to continue.'''
+
+        self.text = TextStim(self.session.win, txt,
+                             height=txt_height, wrapWidth=txt_width, **kwargs)
+
+        self.keys = keys
+
+    def draw(self):
+        self.text.draw()
+
+    def get_events(self):
+        events = super().get_events()
+
+        if self.keys is None:
+            if events:
+                self.stop_phase()
+        else:
+            for key, t in events:
+                if key in self.keys:
+                    self.stop_phase()
