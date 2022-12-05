@@ -14,7 +14,7 @@ window:
 
 monitor:
   name: default
-  width: 42
+  width: 36
   distance: 125  # in cm
   gamma: 1
 
@@ -32,8 +32,8 @@ mri:
   n_dummy_scans: 4
 
 pile:
-  aperture_radius: 5.25
-  dot_radius: .3
+  aperture_radius: 5
+  dot_radius: .2
   image1: 'assets/onefranc_v4.png'
   image2: 'assets/onefranc_v4_neg.png'
 
