@@ -54,6 +54,9 @@ docs/_build/
 experiment/logs/*
 experiment/settings/*
 
+experiment_risk/logs/*
+experiment_risk/settings/*
+
 ._*
 *output.nipype
 *.job
