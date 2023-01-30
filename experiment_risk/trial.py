@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class GambleTrial(Trial):
-    def __init__(self, session, trial_nr, phase_durations=None, format = 'non-symbolic',
+    def __init__(self, session , trial_nr, phase_durations=None, format = 'non-symbolic',
                  prob1=0.55, prob2=1.0, num1=10, num2=5,**kwargs):
 
         if phase_durations is None:
@@ -119,14 +119,14 @@ class GambleTrial(Trial):
 
             if t - self.last_key_responses[key] > 0.5:
                 if self.phase == 0: # reponse during phase 0
-                    if self.choice is None:
+                    if self.choice is None: # of that trial --> no response given so far, only first response is recorded
                         if key in [self.buttons[0], self.buttons[1]]:
                             self.choice_time = self.session.clock.getTime()
                             if key == self.buttons[0]:
                                 self.choice = 1
                             elif key == self.buttons[1]:
                                 self.choice = 2
-                            self.choice_stim.text = f'You chose pile {self.choice}'
+                            self.choice_stim.text = f'Sie haben Option {self.choice} gewählt'
 
                             self.log(choice=self.choice)
                             self.stop_phase()
@@ -181,7 +181,7 @@ class InstructionTrial(Trial):
         txt_width = self.session.settings['various'].get('text_width')
 
         if txt is None:
-            txt = '''Pess any button to continue.'''
+            txt = '''Drücken Sie eine Taste um forzufahren'''
 
         self.text = TextStim(self.session.win, txt,
                              height=txt_height, wrapWidth=txt_width, **kwargs)
@@ -201,3 +201,48 @@ class InstructionTrial(Trial):
             for key, t in events:
                 if key in self.keys:
                     self.stop_phase()
+
+
+class TaskInstructionTrial(InstructionTrial):
+    
+    def __init__(self, session, trial_nr, txt=None, phase_durations=[np.inf], format = 'non-symbolic',
+                 **kwargs):
+
+        if txt is None:
+            if format == 'non-symbolic':
+                txt = f"""
+
+                In dieser Aufgabe sehen Sie zwei Stapel von Schweizer Franken als Münzen nebeneinander.
+                Beide Stapel sind mit einer Wahrscheinlichkeit (als Kreisdiagramm oberhalb und als Prozentzahl) kombiniert.
+
+                Ihre Aufgabe ist es, mit der J-Taste (Stapel 1) oder der K-Taste (Stapel 2) entweder die linke oder die rechte Lotterie zu wählen.
+
+                HINWEIS: Wenn Sie zu spät oder gar nicht antworten 
+                antworten, erhalten Sie kein Geld für diesen Versuch. 
+
+                Zwischendurch gibt es einige Pausen, für die Sie sich so viel Zeit nehmen können, wie Sie möchten.
+
+                Drücken Sie eine Ihrer Tasten, um fortzufahren.
+
+                """
+            if format == 'symbolic':
+                txt = f"""
+
+                In dieser Aufgabe sehen Sie zwei Beträge von Schweizer Franken als Zahlen nebeneinander.
+                Beide Beträge sind mit einer Wahrscheinlichkeit (als Kreisdiagramm oberhalb und als Prozentzahl) kombiniert.
+
+                Ihre Aufgabe ist es, mit der J-Taste (Stapel 1) oder der K-Taste (Stapel 2) entweder die linke oder die rechte Lotterie zu wählen.
+
+                HINWEIS: Wenn Sie zu spät oder gar nicht antworten 
+                antworten, erhalten Sie kein Geld für diesen Versuch. 
+
+                Zwischendurch gibt es einige Pausen, für die Sie sich so viel Zeit nehmen können, wie Sie möchten.
+
+                Drücken Sie eine Ihrer Tasten, um fortzufahren.
+
+                """
+
+
+        super().__init__(session=session, trial_nr=trial_nr, phase_durations=phase_durations, txt=txt, **kwargs)
+
+
