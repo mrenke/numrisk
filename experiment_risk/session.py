@@ -8,7 +8,6 @@ from make_design import makeDesign
 from utils import BreakPhase
 import numpy as np
 
-
 class RiskPileSession(Session):
     """ Simple session with x trials. """
     def __init__(self, output_str, subject=None, output_dir=None, settings_file=None, n_breaks = 4, format = 'non-symbolic'):
@@ -71,7 +70,7 @@ class RiskPileSession(Session):
         array_log = []
 
         for trial in self.trials:
-            if isinstance(trial, self.Trial):
+            if isinstance(trial, GambleTrial):
                 array_log.append(trial.get_stimulus_array_log())
 
         if len(array_log) > 0:
