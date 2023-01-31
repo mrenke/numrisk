@@ -35,15 +35,15 @@ def create_stimulus_array_log_df(stimulus_arrays, index=None):
 
     return stimuli
 
-def get_output_dir_str(subject, session, task):
+def get_output_dir_str(subject, session, task, format = 'non-symbolic'):
     output_dir = op.join(op.dirname(__file__), 'logs', f'sub-{subject}')
     logging.warn(f'Writing results to  {output_dir}')
 
     if session:
         output_dir = op.join(output_dir, f'ses-{session}')
-        output_str = f'sub-{subject}_ses-{session}_task-{task}'
+        output_str = f'sub-{subject}_ses-{session}_task-{task}_{format}'
     else:
-        output_str = f'sub-{subject}_task-{task}'
+        output_str = f'sub-{subject}_task-{task}_{format}'
 
     return output_dir, output_str
 
@@ -71,11 +71,11 @@ class BreakPhase(Trial):
         super().__init__(session, trial_nr, phase_durations, **kwargs)
 
         text = f"""
-                you have done {break_n}/{n_breaks} of the experiment,        
-                this is a short break.
+                Sie haben {break_n}/{n_breaks} des Experimentes geschafft,        
+                dies ist eine kurze Pause.
 
-                take as much time as you want,
-                just press any button to continue.   
+                Nehmen Sie sich so viel Zeit wie sie wollen,
+                drücken Sie eine der Tasten um weiterzumachen.   
                 """
         txt_height = self.session.settings['various'].get('text_height')
         txt_width = self.session.settings['various'].get('text_width')

@@ -48,8 +48,8 @@ class RiskPileSession(Session):
 
     def run(self):
         self.start_experiment()
-        s = TaskInstructionTrial(self, trial_nr=0, format = 'non-symbolic')
-        #s.run()
+        s = TaskInstructionTrial(self, trial_nr=0, format = self.format)
+        s.run()
 
         break_n = 0
         n_breaks = self.n_breaks

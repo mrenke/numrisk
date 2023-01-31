@@ -76,7 +76,7 @@ class InstructionSession(RiskPileSession):
 
         Willkommen zu der Einführung des Experimentes. Hier erklären wir wie jeder einzelne Versuch abläuft.
 
-        Zuersteinmal werden Sie immer 2 Tasten haben um Ihre Auswahl abzugeben
+        Zuersteinmal werden Sie immer 2 Tasten haben um Ihre Auswahl einzugeben.
 
         Auf diesem Computer sind diese:
         * die J-Taset (linker Zeigefinger)
@@ -101,12 +101,12 @@ class InstructionSession(RiskPileSession):
         txt = """
         
         In diesem Experiment müssen Sie in jedem Versuch wählen zwischen: 
-        * (i) eine gewissse Menge Geld sicher zu bekommen 
+        * (i) eine gewisse Menge Geld sicher zu bekommen 
         oder 
-        * (ii) an einer Lotterie teilzunehmen, bei der Sie mit 55% Wahrscheinlichkeit zu Gewinnen eine erheblich größere Menge Geld bekommen.
+        * (ii) an einer Lotterie teilzunehmen, bei der Sie mit 55% Wahrscheinlichkeit zu gewinnen eine erheblich größere Menge Geld bekommen.
 
-        Während dem Verlauf des Experimentes werden Sie viele Entscheidungen machen. 
-        Nach dem Experiment werden wir zufällig einen dieser Versuche wählen. Wenn Sie in diesem Versuch die 55%- Option gewählt hatten, werden wir eine digitale Lotterie durchführen die bestimmt ob Sie den angebotenen Betrag bekommen.
+        Während dem Verlauf des Experimentes werden Sie viele Entscheidungen treffen. 
+        Nach dem Experiment werden wir zufällig einen dieser Versuche wählen. Wenn Sie in diesem Versuch die 55%- Option gewählt hatten, werden wir eine digitale Lotterie durchführen die bestimmt, ob Sie den angebotenen Betrag bekommen.
 
         Drücke Taste 1 um fortzufahren.
         """
@@ -115,7 +115,7 @@ class InstructionSession(RiskPileSession):
                                             txt=txt, keys=[self.buttons[0]]))
 
         txt = """
-        Bitte notiern Sie: für den Fall dass Sie während eines Versuches nicht in der gegebenen Zeit antworten und dieser dann am Ende zufällig ausgewählt wird, erhalten sie 0 CHF.
+        Bitte bemerken Sie: für den Fall, dass Sie während eines Versuches nicht in der gegebenen Zeit (3 sek.) antworten und dieser dann am Ende zufällig ausgewählt wird, erhalten Sie 0 CHF.
 
         Drücke Taste 1 um fortzufahren.
         """
@@ -126,7 +126,7 @@ class InstructionSession(RiskPileSession):
         txt = """
 
         Ein Beispiel: 
-        Nehmen wir and während einem Versuch mussten Sie zwischen (1) 5 CHF mit 55% und (2) 1 CHF mit 100% zu gewinnen wählen. Sie haben nicht rechtzeitig geantwortet. Nun wird dieser Versuch für ihre Bonusbezahlung am Ende ausgewählt. Wieviel Geld bekommen Sie?
+        Nehmen wir an, während einem Versuch mussten Sie zwischen (1) 5 CHF mit 55% und (2) 1 CHF mit 100% zu gewinnen wählen. Sie haben nicht rechtzeitig geantwortet. Nun wird dieser Versuch für ihre Bonusbezahlung am Ende ausgewählt. Wieviel Geld bekommen Sie?
 
         1. Ich habe eine 55% Wahrscheinlichlkeit 5 CHF zu bekommen.
         2. Ich gewinne 0 CHF.
@@ -139,9 +139,10 @@ class InstructionSession(RiskPileSession):
                                             txt=txt, keys=[self.buttons[1]]))
 
         txt = """
+        Super ! 
         Wir werden Sie nun durch alle Schritte des Versuches führen.
 
-        Grundsätzlich werden die Beträge in Schweizer Franken (CHF) die Sie gewinnen können ind er ersten Hälfte des Expeimentes als Stapel von Münzen und in der zweiten als Zahlen angezeigt.
+        Grundsätzlich werden die Beträge in Schweizer Franken (CHF) die Sie gewinnen können in der ersten Hälfte des Experimentes als Stapel von Münzen und in der zweiten als Zahlen angezeigt.
         Es ändert sich aber nur das Anzeigeformat, sonst bleibt alles gleich.
 
         Nun zuerst ein Beispiel in dem der Betrag als Stapel von Münzen angezeigt wird.
@@ -210,7 +211,13 @@ class InstructionSession(RiskPileSession):
         txt = """
         Gut gemacht!!
 
-        Sie werden nun 10 Probe-Versuche machen. Diese werden automatisch voranschreiten.
+        Sie werden nun 10 Probe-Versuche machen. 
+        Diese werden automatisch voranschreiten.Sprich, Sie haben nun immer 3 sek. Zeit um zu antworten.
+        
+        Da Sie im richtigen Experiment sehr viele Versuche machen werden, sind hier Pausen eingebaut, für die Sie sich so viel Zeit nehmen können wie Sie wollen. 
+        In dieser kurzen 10 Probe-Versuchs-Demo ist auch eine Pause als Beispiel eingebaut ;)
+        
+        Achtung: manchmal ist die 55%-Option links, manchmal rechts (hier bekommen sie noch einen Hinweis).
 
         """
 
@@ -229,10 +236,18 @@ class InstructionSession(RiskPileSession):
 
         for (p1, p2), d2 in trial_settings.groupby(['p1', 'p2'], sort=False):
             n_trials_in_miniblock = len(d2)
-            self.trials.append(TaskInstructionTrial(session=self, trial_nr=trial_nr))
-                                               #n_trials=n_trials_in_miniblock,
-                                               #prob1=p1,
-                                               #prob2=p2))
+            if p1 == 0.55: 
+                txt = """
+                In den folgenden Versuchen ist die 55%-Option links.
+                """
+            elif p1 == 1: 
+                txt = """
+                In den folgenden Versuchen ist die 55%-Option rechts.
+                """
+
+            self.trials.append(InstructionTrial(self, 1,
+                                                txt=txt))
+
             trial_nr += 1
 
             for ix, row in d2.iterrows():
