@@ -1,5 +1,5 @@
 # task.py from stressrisk/experiment modified
-
+# env on my mac: psychopy2
 # run like:  python task.py 99 1 1 --settings macbook 
 
 from exptools2.core import Session # installed, Gilles version
@@ -96,19 +96,15 @@ class TaskInstructionTrial(InstructionTrial):
 
         if txt is None:
             txt = f"""
-            This is run {run}/{n_runs}
+            Dies ist Lauf {run} von {n_runs}
 
-            In this task, you will see two piles of Swiss Franc coins in
-            succession. 
+            In dieser Aufgabe sehen Sie nacheinander zwei Stapel von Schweizer Franken als Münzen.
 
-            Your task is to decide which pile is larger, by using your index (pile 1) or middle (pile 2) finger.
+            Ihre Aufgabe ist es zu entscheiden, welcher Stapel größer ist, indem Sie Ihren Zeigefinger (Stapel 1) oder Ihren Mittelfinger (Stapel 2) benutzen.
 
-            NOTE: if you are to late in responding, or you do not 
-            respond. 
+            Nehmen Sie sich etwas Zeit, um zwischen den Durchgängen eine Pause zu machen.
 
-            Take some time to take a break between runs if you want to.
-
-            Press any of your buttons to continue.
+           Drücken Sie eine Ihrer Tasten, um fortzufahren.
 
             """
 
