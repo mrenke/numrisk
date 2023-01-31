@@ -3,6 +3,8 @@ from exptools2.core import Session, PylinkEyetrackerSession
 from psychopy import visual, logging
 import pandas as pd
 import os.path as op
+from trial_magJudge import MagJudgeTrial
+
 
 
 class PileSession(PylinkEyetrackerSession):
@@ -50,7 +52,7 @@ class PileSession(PylinkEyetrackerSession):
         array_log = []
 
         for trial in self.trials:
-            if isinstance(trial, self.Trial):
+            if isinstance(trial, MagJudgeTrial):
                 array_log.append(trial.get_stimulus_array_log())
 
         if len(array_log) > 0:
