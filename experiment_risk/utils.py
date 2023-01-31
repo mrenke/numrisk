@@ -35,7 +35,7 @@ def create_stimulus_array_log_df(stimulus_arrays, index=None):
 
     return stimuli
 
-def get_output_dir_str(subject, session, task, format = 'non-symbolic'):
+def get_output_dir_str(subject, session, task, format):
     output_dir = op.join(op.dirname(__file__), 'logs', f'sub-{subject}')
     logging.warn(f'Writing results to  {output_dir}')
 
