@@ -279,7 +279,7 @@ if __name__ == '__main__':
     cmd_args = parser.parse_args()
 
     subject, session, task, run = cmd_args.subject, 'instruction', 'instruction',  None
-    output_dir, output_str = get_output_dir_str(subject, session, task ) #, run)
+    output_dir, output_str = get_output_dir_str(subject, session, task, None ) #, run)
 
     log_file = op.join(output_dir, output_str + '_log.txt')
     logging.warn(f'Writing results to: {log_file}')
