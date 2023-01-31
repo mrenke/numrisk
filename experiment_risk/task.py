@@ -43,7 +43,7 @@ def run_experiment(session_cls, task, subject=None, session=None, settings='defa
 
     logging.warn(f'Using {settings_fn} as settings')
 
-    output_dir, output_str = get_output_dir_str(subject, session, task)
+    output_dir, output_str = get_output_dir_str(subject, session, task, format)
 
     log_file = op.join(output_dir, output_str + '_log.txt')
     logging.warn(f'Writing results to: {log_file}')
