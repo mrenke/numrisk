@@ -153,6 +153,7 @@ class InstructionSession(RiskPileSession):
                                             txt=txt, keys=[self.buttons[0]]))
 
         txt = """
+        
         Nun ist es ihre Zeit eine der beiden Optionen (Stapel) zu wählen
         Sie können Taste 1 für die erste und Taste 2 für die zweite Option drücken.
         """
