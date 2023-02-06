@@ -60,3 +60,6 @@ experiment_risk/settings/*
 ._*
 *output.nipype
 *.job
+
+# mac stuff
+*.DS_STORE
