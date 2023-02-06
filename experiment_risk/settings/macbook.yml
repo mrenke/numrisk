@@ -63,4 +63,12 @@ various:
   buttons: ['j', 'k']
   button_size: 2
 
+eyetracker:
+  model: eyelink
+  CNUM: 5
+  MIN_CALIB_FIX: 1000
+  options:
+    active_eye: RIGHT
+    sample_rate: 500
+    calibration_type: HV5
 

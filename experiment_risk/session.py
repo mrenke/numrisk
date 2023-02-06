@@ -1,4 +1,4 @@
-from exptools2.core import Session
+from exptools2.core import Session, PylinkEyetrackerSession
 from psychopy import visual, logging
 import pandas as pd
 import os.path as op
@@ -8,11 +8,12 @@ from make_design import makeDesign
 from utils import BreakPhase
 import numpy as np
 
-class RiskPileSession(Session):
+
+class RiskPileSession(PylinkEyetrackerSession):
     """ Simple session with x trials. """
-    def __init__(self, output_str, subject=None, output_dir=None, settings_file=None, n_breaks = 4, format = 'non-symbolic'):
+    def __init__(self, output_str, subject=None, output_dir=None, settings_file=None, n_breaks = 4, format = 'non-symbolic', eyetracker_on=True):
         """ Initializes TestSession object. """
-        super().__init__(output_str, output_dir=output_dir, settings_file=settings_file)
+        super().__init__(output_str, output_dir=output_dir, settings_file=settings_file, eyetracker_on=eyetracker_on)
         self.subject = subject
         self.image1 = visual.ImageStim(self.win,
                                        self.settings['pile'].get('image1'),
@@ -46,6 +47,10 @@ class RiskPileSession(Session):
         #self.trials = [GambleTrial(self, trial_nr=1, num1=5, num2=10, prob1=1, prob2=.55)]
 
     def run(self):
+        
+        if self.eyetracker_on:
+            self.calibrate_eyetracker()
+
         self.start_experiment()
         s = TaskInstructionTrial(self, trial_nr=0, format = self.format)
         s.run()

@@ -57,7 +57,7 @@ def run_experiment(session_cls, task, subject=None, session=None, settings='defa
     session_object = session_cls(output_str=output_str,
                             output_dir=output_dir,
                             settings_file=settings_fn, subject=subject,
-    #                        eyetracker_on=eyetracker_on, 
+                            eyetracker_on=eyetracker_on, 
                             format = format,
                             n_breaks = n_breaks,
                             *args, **kwargs)
