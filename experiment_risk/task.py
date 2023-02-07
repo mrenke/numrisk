@@ -15,9 +15,10 @@ def run_experiment(session_cls, task, subject=None, session=None, settings='defa
     parser.add_argument('--settings', default=settings, nargs='?')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--format', default='non-symbolic')
+    parser.add_argument('--eyetracker', default='on')
 
     cmd_args = parser.parse_args()
-    subject, session, settings, format = cmd_args.subject, cmd_args.session, cmd_args.settings, cmd_args.format
+    subject, session, settings, format, eyetracker = cmd_args.subject, cmd_args.session, cmd_args.settings, cmd_args.format, cmd_args.eyetracker
 
 
     if subject is None:
@@ -34,7 +35,7 @@ def run_experiment(session_cls, task, subject=None, session=None, settings='defa
     with open(settings_fn, 'r') as f_in:
         settings_ = yaml.safe_load(f_in)
 
-    if 'eyetracker' in settings_.keys():
+    if 'eyetracker' in settings_.keys() and eyetracker == 'on':
         eyetracker_on = True
         logging.warn("Using eyetracker")
     else:

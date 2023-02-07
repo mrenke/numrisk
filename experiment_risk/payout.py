@@ -9,7 +9,7 @@ from utils import get_output_dir_str
 import numpy as np
 
 
-def get_payout(subject, session, settings='default'):
+def get_payout(subject, session, settings='macbook'):
 
     task = 'payout'
 
@@ -39,46 +39,46 @@ def get_payout(subject, session, settings='default'):
 
     row = df.sample().iloc[0]
 
-    txt = 'The stimulus computer randomly selected one of the choices ' \
+    txt = 'Der Computer hat zufällig einen der Versuche ausgesucht' 
     'you made in this session\n\n'
 
     if np.isnan(row.choice):
-        txt += f'On the selected trial, you gave NO answer. '\
-            'This means you will not get a bonus'
+        txt += f'In dem ausgewählt Versuch, hast du KEINE Antwort gegeben. ' \
+            '\n\nDas bedeutet, du bekommst keinen Bonus'
         payout = 0
     else:
-        txt += f'You chose between {int(np.round(row.prob1*100))}% probability of ' \
-            f'winning {int(row.n1)} CHF, or {int(np.round(row.prob2*100))}% probability ' \
-            f'of winning {int(row.n2)} CHF.'
+        txt += f'\n\nDu hast zwischen mit {int(np.round(row.prob1*100))}% Wahrscheinlichkeit ' \
+            f' {int(row.n1)} CHF zu gewinnen, oder mit {int(np.round(row.prob2*100))}% Wahrscheinlichkeit ' \
+            f' {int(row.n2)} CHF zu gewinnen gewählt.'
 
         if ((row.choice == 1) and (row['prob1'] == 1)):
-            txt += f'\n\nYou chose the safe option and get {int(row.n1)} CHF'
+            txt += f'\n\nDu hattest die sichere Option gewählt und erhältst nun {int(row.n1)} CHF Bonus'
             payout = row.n1
 
         if ((row.choice == 2) and (row.prob2 == 1)):
-            txt += f'\n\nYou chose the safe option and get {int(row.n2)} CHF'
+            txt += f'\n\nDu hattest die sichere Option gewählt und erhältst nun {int(row.n2)} CHF Bonus'
             payout = row.n2
 
         if ((row.choice == 2) and (row.prob1 == 1)):
-            txt += '\n\nYou chose the risky option (pile 2). '
+            txt += '\n\nDu hattest die Option mit Risiko gewählt. '
             die = np.random.randint(100) + 1
-            txt += f'The die turned out to be {die}. '
+            txt += f'Der digitale Würfel zeigt {die}. '
             if die > 55:
-                txt += '\n\nSo you got NO bonus.'
+                txt += '\n\nDaher bekommst du leider keinen Bonus.'
                 payout = 0
             else:
-                txt += f'\n\nSo you got a bonus of {int(row.n2)} CHF. '
+                txt += f'\n\nDaher bekommst du einen {int(row.n2)} CHF Bonus. '
                 payout = row.n2
 
         if ((row.choice == 1) and (row.prob2 == 1)):
-            txt += '\n\nYou chose the risky option (pile 1). '
+            txt += '\n\nDu hattest die Option mit Risiko gewählt. '
             die = np.random.randint(100) + 1
-            txt += f'The die turned out to be {die}. '
+            txt += f'Der digitale Würfel zeigt {die}. '
             if die > 55:
-                txt += f'\n\nSo you got NO bonus'
+                txt += f'\n\nDaher bekommst du leider keinen Bonus.'
                 payout = 0
             else:
-                txt += f'\n\nSo you got a bonus of {int(row.n1)} CHF.'
+                txt += f'\n\nDaher bekommst du einen  {int(row.n1)} CHF Bonus.'
                 payout = row.n1
 
     output_dir, output_str = get_output_dir_str(subject, session, task, None)
