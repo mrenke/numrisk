@@ -70,13 +70,25 @@ class BreakPhase(Trial):
 
         super().__init__(session, trial_nr, phase_durations, **kwargs)
 
-        text = f"""
+        if n_breaks/break_n == 2: # after half of the experiment options switch sides 
+            text = f"""
                 Sie haben {break_n}/{n_breaks} des Experimentes geschafft,        
                 dies ist eine kurze Pause.
 
                 Nehmen Sie sich so viel Zeit wie sie wollen,
-                drücken Sie eine der Tasten um weiterzumachen.   
+                drücken Sie eine der Tasten um weiterzumachen.  
+
+                Bitte beachten Sie: in dem folgenden Teil haben die sichere und die risiko Option die Seiten getauscht!
+ 
                 """
+        else:
+            text = f"""
+                    Sie haben {break_n}/{n_breaks} des Experimentes geschafft,        
+                    dies ist eine kurze Pause.
+
+                    Nehmen Sie sich so viel Zeit wie sie wollen,
+                    drücken Sie eine der Tasten um weiterzumachen.   
+                    """
         txt_height = self.session.settings['various'].get('text_height')
         txt_width = self.session.settings['various'].get('text_width')
 
