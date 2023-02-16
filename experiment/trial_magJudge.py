@@ -20,7 +20,7 @@ class MagJudgeTrial(Trial):
             # 0 1 2 3 4 5 6 7 8 9 --> delete 2 & 6 (piecharts)
             #phase_durations = [.25, .3, .3, .5, .6, jitter1, .3, .3, .6, jitter2]
             phase_durations = [.25, .75,  .6, jitter1, .6, jitter2]
-        elif len(phase_durations) == 12:
+        elif len(phase_durations) == 6:
             phase_durations = phase_durations
         else:
             raise Exception(
@@ -77,7 +77,7 @@ class MagJudgeTrial(Trial):
 
         if self.phase == 5:
             if self.choice is not None:
-                if (self.session.clock.getTime() - self.choice_time) < .5:
+                #if (self.session.clock.getTime() - self.choice_time) < .5:
                     self.choice_stim.draw()
 
     def get_events(self):

@@ -59,7 +59,7 @@ class InstructionSession(RiskPileSession):
 
     def __init__(self, output_str, subject=None, output_dir=None, settings_file=None):
         super().__init__(output_str, subject=subject,
-                         output_dir=output_dir, settings_file=settings_file) #, eyetracker_on=False)
+                         output_dir=output_dir, settings_file=settings_file, eyetracker_on=False)
 
         #logging.warn(self.settings['run'])
         self.buttons = self.settings['various'].get('buttons')
@@ -276,6 +276,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default='instructee', nargs='?')
     parser.add_argument('--settings', default='instructions', nargs='?')
+
     cmd_args = parser.parse_args()
 
     subject, session, task, run = cmd_args.subject, 'instruction', 'instruction',  None
@@ -289,7 +290,9 @@ if __name__ == '__main__':
 
     session_object = InstructionSession(output_str=output_str,
                                         output_dir=output_dir,
-                                        settings_file=settings_fn, subject=subject)
+                                        settings_file=settings_fn, 
+                                        #eyetracker_on= False,
+                                        subject=subject)
 
     session_object.create_trials()
     print(session_object.trials)
