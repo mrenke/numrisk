@@ -95,15 +95,15 @@ class InstructionSession(PileSession):
 
         Zuersteinmal werden Sie immer 2 Tasten haben um Ihre Auswahl einzugeben. 
 
-        Auf diesem Computer sind diese:
-        * die J-Taset (linker Zeigefinger)
-        * die K-Taste (linker Mittelfinger)
+        Auf der Tastatur dieses Computers sind diese:
+        * die J-Taset (rechter Zeigefinger)
+        * die K-Taste (rechter Mittelfinger)
 
         TIPP: lassen Sie ihre Finger auf den Tasten liegen während des Experimentes. Bei diesem Computer hat die J-Taste eine kleine Erhöhung die man spüren kann.
 
         Im Scanner wird es auch 2 Tasten geben, die sie mit den gleichen Fingern Ihrer linken Hand bedienen werden.
 
-        Von nun an nennen wir sie Taste 1 (linker Zeigefinger) und Taste 2 (linker Mittelfinger)
+        Von nun an nennen wir sie Taste 1 (rechter Zeigefinger) und Taste 2 (rechter Mittelfinger)
 
         Drücke Taste 1 um fortzufahren.
 
