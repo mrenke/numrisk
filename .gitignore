@@ -63,3 +63,5 @@ experiment_risk/settings/*
 
 # mac stuff
 *.DS_STORE
+*/.DS_Store
+.DS_Store
