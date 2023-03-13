@@ -65,3 +65,6 @@ experiment_risk/settings/*
 *.DS_STORE
 */.DS_Store
 .DS_Store
+
+# simulation data
+behavior_simulations/data_saved/*
