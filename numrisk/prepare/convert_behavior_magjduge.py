@@ -23,8 +23,9 @@ def main(subject, session, bids_folder, max_rt=1.0):
             n_volumes = image.load_img(nii).shape[-1]
         else:
             n_volumes = 188 #135
+            print('no .nii file for n-volumes (yet?)')
 
-        behavior = pd.read_table(op.join(sourcedata, f'behavior_magjudge/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-magjudge_run-{run}_events.tsv'))
+        behavior = pd.read_table(op.join(sourcedata, f'behavior_magjudge/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-risk_run-{run}_events.tsv'))
         behavior['trial_nr'] = behavior['trial_nr'].astype(int)
 
         # print(behavior)
