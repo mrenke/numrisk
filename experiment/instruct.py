@@ -101,7 +101,7 @@ class InstructionSession(PileSession):
 
         TIPP: lassen Sie ihre Finger auf den Tasten liegen während des Experimentes. Bei diesem Computer hat die J-Taste eine kleine Erhöhung die man spüren kann.
 
-        Im Scanner wird es auch 2 Tasten geben, die sie mit den gleichen Fingern Ihrer linken Hand bedienen werden.
+        Im Scanner wird es auch 2 Tasten geben, die sie mit den gleichen Fingern Ihrer rechten Hand bedienen werden.
 
         Von nun an nennen wir sie Taste 1 (rechter Zeigefinger) und Taste 2 (rechter Mittelfinger)
 

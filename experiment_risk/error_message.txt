@@ -1,0 +1,38 @@
+
+C:\Exp_files\Maike\virtualenv\lib\site-packages\pandas\core\indexes\base.py:6982: FutureWarning: In a future version, the Index constructor will not infer numeric dtypes when passed object-dtype sequences (matching Series behavior)
+  return Index(sequences[0], name=names)
+3.3697  WARNING         We strongly recommend you activate the PTB sound engine in PsychoPy prefs as the preferred audio engine. Its timing is vastly superior. Your prefs are currently set to use ['sounddevice', 'PTB', 'pyo', 'pygame'] (in that order).
+14.8235         WARNING         Using eyetracker
+14.8235         WARNING         Using C:\Exp_files\Maike\numrisk\experiment_risk\settings\macbook.yml as settings
+14.8236         WARNING         Writing results to  C:\Exp_files\Maike\numrisk\experiment_risk\logs\sub-test2
+14.8236         WARNING         Writing results to: C:\Exp_files\Maike\numrisk\experiment_risk\logs\sub-test2\ses-y\sub-test2_ses-y_task-risk_non-symbolic_log.txt
+14.8735         WARNING         User requested fullscreen with size [1280 1024], but screen is actually [1920, 1080]. Using actual size
+15.8741         WARNING         Actual framerate: 59.99448 (1 frame = 0.01667)
+21.8428         WARNING         Writing results to: C:\Exp_files\Maike\numrisk\experiment_risk\logs\sub-test2\ses-y\sub-test2_ses-y_task-risk_non-symbolic
+33.4913         WARNING         t of last frame was 33.27ms (=1/30)
+33.5247         WARNING         t of last frame was 33.40ms (=1/29)
+33.5580         WARNING         t of last frame was 33.33ms (=1/30)
+33.5913         WARNING         t of last frame was 33.34ms (=1/29)
+33.6247         WARNING         Multiple dropped frames have occurred - I'll stop bothering you about them!
+file size = 222915
+receive_data_file_feedback_udp timeout
+alert_printf Error: Timedout, transfer aborted. So far transferred 199680 of 222915 .
+total bytes = 199680
+Traceback (most recent call last):
+  File "C:\Exp_files\Maike\numrisk\experiment_risk\task.py", line 79, in <module>
+    run_experiment(session_cls, task=task)
+  File "C:\Exp_files\Maike\numrisk\experiment_risk\task.py", line 69, in run_experiment
+    session_object.run()
+  File "C:\Exp_files\Maike\numrisk\experiment_risk\session.py", line 61, in run
+    trial.run()
+  File "C:\Exp_files\Maike\virtualenv\lib\site-packages\exptools2-0.1.dev0-py3.9.egg\exptools2\core\trial.py", line 254, in run
+    self.get_events()
+  File "C:\Exp_files\Maike\numrisk\experiment_risk\trial.py", line 114, in get_events
+    events = super().get_events()
+  File "C:\Exp_files\Maike\virtualenv\lib\site-packages\exptools2-0.1.dev0-py3.9.egg\exptools2\core\trial.py", line 164, in get_events
+    self.session.close()
+  File "C:\Exp_files\Maike\numrisk\experiment_risk\session.py", line 73, in close
+    super().close()
+  File "C:\Exp_files\Maike\virtualenv\lib\site-packages\exptools2-0.1.dev0-py3.9.egg\exptools2\core\eyetracker.py", line 119, in close
+    self.tracker.receiveDataFile(self.edf_name, f_out)
+RuntimeError: File transfer aborted
