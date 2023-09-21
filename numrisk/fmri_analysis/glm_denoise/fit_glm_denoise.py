@@ -11,19 +11,28 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def main(subject,  bids_folder, smoothed=False,  retroicor=False): #session,
+def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = None): # 'both', 'run_123', 'run_456'
     
     session = 1
     derivatives = op.join(bids_folder, 'derivatives')
 
-    runs = range(1, 7)
 
     sub = Subject(subject, bids_folder=bids_folder)
 
-    ims = sub.get_preprocessed_bold(session=session)
 
-    base_dir = 'glm_stim1.denoise'
-       
+    if split_data == None:
+        base_dir = 'glm_stim1.denoise'
+        runs = range(1, 7)
+    else:
+        base_dir = 'glm_stim1_halfdata.denoise'
+        if split_data == 'run_123':
+            runs = range(1, 4)
+        elif split_data == 'run_456':
+            runs = range(4,7)
+        split_data = f'_{split_data}' # change name for ouput filename
+    
+    ims = sub.get_preprocessed_bold(session=session, runs=runs)
+
     if retroicor:
             base_dir += '.retroicor'
             confounds = sub.get_retroicor_confounds(session)
@@ -51,7 +60,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False): #session,
                                          drift_order=0,
                                          drift_model=None).drop('constant', axis=1) for run in runs]
 
-    dm = pd.concat(dm, keys=range(1, 7), names=['run']).fillna(0)
+    dm = pd.concat(dm, keys=runs, names=['run']).fillna(0) # keys = range(1, 7)
     dm.columns = [c.replace('_delay_0', '') for c in dm.columns]
     dm /= dm.max()
     print(dm)
@@ -93,7 +102,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False): #session,
     betas = results_glmsingle['typed']['betasmd']
     betas = image.new_img_like(ims[0], betas)
     betas = image.index_img(betas, slice(None, None, 2))
-    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-risk_space-T1w_desc-stims1_pe.nii.gz'))
+    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-risk_space-T1w_desc-stims1_pe{split_data}.nii.gz'))
 
 
 if __name__ == '__main__':
@@ -103,8 +112,9 @@ if __name__ == '__main__':
     parser.add_argument('--bids_folder', default='/data')
     parser.add_argument('--smoothed', action='store_true')
     parser.add_argument('--retroicor', action='store_true')
+    parser.add_argument('--split_data', default=None)
 
     args = parser.parse_args()
 
     main(args.subject,  #args.session,
-         bids_folder=args.bids_folder, smoothed=args.smoothed, retroicor=args.retroicor)
+         bids_folder=args.bids_folder, smoothed=args.smoothed, retroicor=args.retroicor,split_data = args.split_data)
