@@ -39,7 +39,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False): #session,
     if not op.exists(base_dir):
         os.makedirs(base_dir)
 
-    onsets = sub.get_fmri_events(session=session, runs = runs) # np.shape(onsets)[0] = 2* N_trials
+    onsets = sub.get_fmri_events(session=session, runs = runs) # np.shape(onsets)[0] = 2* N_trials !
     tr = 2.3
     n = np.shape(image.load_img(ims[0]).get_fdata())[3] # number of volumes
     frametimes = np.linspace(tr/2., (n - .5)*tr, n)
