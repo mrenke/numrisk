@@ -75,7 +75,7 @@ class Subject(object):
             runs = range(1, 7)
 
         images = [op.join(self.bids_folder, 'derivatives', 'fmriprep', f'sub-{self.subject}',
-         f'ses-{session}', 'func', f'sub-{self.subject}_ses-{session}_task-risk_run-{run}_space-{space}_desc-preproc_bold.nii.gz') for run in runs]
+         f'ses-{session}', 'func', f'sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_space-{space}_desc-preproc_bold.nii.gz') for run in runs]
 
         return images
 
@@ -96,7 +96,7 @@ class Subject(object):
         df = []
         for format in ['non-symbolic', 'symbolic']:
 
-            fn = op.join(self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-risk_{format}_events.tsv')
+            fn = op.join(self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_{format}_events.tsv')
 
             if op.exists(fn):
                 d = pd.read_csv(fn, sep='\t',
@@ -119,8 +119,8 @@ class Subject(object):
         df['n1'], df['n2'] = df_[('n1','stimulus')], df_[('n2','stimulus')]
         df['prob1'], df['prob2'] = df_[('prob1','stimulus')], df_[('prob1','stimulus')]
 
-        df['risky_left'] = df_[('prob1', 'stimulus')] == 0.55
-        df['chose_risky'] = (df['risky_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
+        df['magjudgey_left'] = df_[('prob1', 'stimulus')] == 0.55
+        df['chose_magjudgey'] = (df['magjudgey_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
         df.loc[df.choice.isnull(), 'chose_risky'] = np.nan
 
         df['n_risky'] = df['n1'].where(df['risky_left'], df['n2'])
@@ -162,7 +162,7 @@ class Subject(object):
         runs = range(1, 7)
 
         fmriprep_confounds = [
-            op.join(self.bids_folder, 'derivatives', 'fmriprep', f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-risk_run-{run}_desc-confounds_timeseries.tsv') for run in runs]
+            op.join(self.bids_folder, 'derivatives', 'fmriprep', f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_desc-confounds_timeseries.tsv') for run in runs]
         fmriprep_confounds = [pd.read_table(
             cf)[include] for cf in fmriprep_confounds]
 
@@ -180,7 +180,7 @@ class Subject(object):
             columns, names=['modality', 'order', 'type'])                        
 
         retroicor_confounds = [
-            op.join(self.bids_folder, f'derivatives/physiotoolbox/sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-risk_run-{run}_desc-retroicor_timeseries.tsv') for run in runs]
+            op.join(self.bids_folder, f'derivatives/physiotoolbox/sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_desc-retroicor_timeseries.tsv') for run in runs]
         retroicor_confounds = [pd.read_table(
             cf, header=None, usecols=np.arange(18), names=columns) if op.exists(cf) else pd.DataFrame(np.zeros((135, 0))) for cf in retroicor_confounds]
 
@@ -248,7 +248,7 @@ class Subject(object):
             key += '.smoothed'
 
         fn = op.join(self.bids_folder, 'derivatives', key, f'sub-{self.subject}', f'ses-{session}', 'func', 
-                f'sub-{self.subject}_ses-{session}_task-risk_space-T1w_desc-stims1_pe.nii.gz')
+                f'sub-{self.subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe.nii.gz')
 
         im = image.load_img(fn)
         
@@ -263,7 +263,7 @@ class Subject(object):
 
         if roi is None:
             if epi_space:
-                base_mask = op.join(self.bids_folder, 'derivatives', f'fmriprep/sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-risk_run-1_space-T1w_desc-brain_mask.nii.gz')
+                base_mask = op.join(self.bids_folder, 'derivatives', f'fmriprep/sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-1_space-T1w_desc-brain_mask.nii.gz')
                 return image.load_img(base_mask)
             else:
                 raise NotImplementedError
@@ -277,7 +277,7 @@ class Subject(object):
             raise NotImplementedError
 
         if epi_space:
-            base_mask = op.join(self.bids_folder, 'derivatives', f'fmriprep/sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-risk_run-1_space-T1w_desc-brain_mask.nii.gz')
+            base_mask = op.join(self.bids_folder, 'derivatives', f'fmriprep/sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-1_space-T1w_desc-brain_mask.nii.gz')
 
             mask = image.resample_to_img(mask, base_mask, interpolation='nearest')
 
@@ -344,7 +344,7 @@ class Subject(object):
         behavior = []
         for run in runs:
             behavior.append(pd.read_table(op.join(
-                self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-risk_run-{run}_events.tsv')))
+                self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_events.tsv')))
 
         behavior = pd.concat(behavior, keys=runs, names=['run'])
         behavior = behavior.reset_index().set_index(
