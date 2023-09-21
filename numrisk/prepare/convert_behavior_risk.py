@@ -15,7 +15,7 @@ def main(subject, session, bids_folder, max_rt=1.0):
     for format in ['non-symbolic', 'symbolic']:
         print(subject, session, format)
 
-        behavior = pd.read_table(op.join(sourcedata, f'behavior/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-risk_{format}_events.tsv'))
+        behavior = pd.read_table(op.join(sourcedata, f'behavior_risk/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-risk_{format}_events.tsv'))
         behavior['trial_nr'] = behavior['trial_nr'].astype(int)
 
         print(behavior)

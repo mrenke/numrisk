@@ -25,9 +25,15 @@ def main(subject, session, bids_folder, max_rt=1.0):
             n_volumes = 188 #135
             print('no .nii file for n-volumes (yet?)')
 
-        behavior = pd.read_table(op.join(sourcedata, f'behavior_magjudge/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-risk_run-{run}_events.tsv'))
+        try:
+            behavior = pd.read_table(op.join(sourcedata, f'behavior_magjudge/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-magjudge_run-{run}_events.tsv'))
+        except:
+            behavior = pd.read_table(op.join(sourcedata, f'behavior_magjudge/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-risk_run-{run}_events.tsv'))
+
+        
         behavior['trial_nr'] = behavior['trial_nr'].astype(int)
 
+        behavior = behavior[behavior['trial_nr'] > 0] # remove beginning "trial" of each run
         # print(behavior)
 
         pulses = behavior[behavior.event_type == 'pulse'][['trial_nr', 'onset']]
@@ -48,6 +54,7 @@ def main(subject, session, bids_folder, max_rt=1.0):
         # phase 2 = stim 1
         # phase 4 = stim 2
         stim1 = behavior[(behavior['event_type'] == 'stim') & (behavior['phase'] == 2)].copy()
+
         stim1['n'] = stim1['n1']
         stim1['onset'] -= t0
         stim1['trial_type'] = 'stimulus 1'
