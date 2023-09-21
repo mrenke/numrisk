@@ -11,4 +11,4 @@ source activate numrefields
 
 export PARTICIPANT_LABEL=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
 
-python $HOME/git/numrisk/numrisk/fmri_analysis/glm/fit_glm_denoise.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk
+python $HOME/git/numrisk/numrisk/fmri_analysis/glm_denoise/fit_glm_denoise.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk
