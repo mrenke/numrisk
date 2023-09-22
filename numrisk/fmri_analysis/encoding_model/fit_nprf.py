@@ -8,13 +8,14 @@ import pandas as pd
 from braincoder.models import GaussianPRF
 from braincoder.optimize import ParameterFitter
 from nilearn.input_data import NiftiMasker
-from stress_risk.utils import get_target_dir
+from numrisk.utils import get_target_dir
 import os
 import os.path as op
 import numpy as np
 
 def main(subject, bids_folder, denoise=True, retroicor=False, smoothed=True,
         pca_confounds=False, split_data = None):
+    
     session = 1
 
     if split_data == None:
