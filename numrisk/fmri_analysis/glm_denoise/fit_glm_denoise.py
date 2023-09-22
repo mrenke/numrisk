@@ -23,13 +23,14 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
     if split_data == None:
         base_dir = 'glm_stim1.denoise'
         runs = range(1, 7)
+        split_data = '' # change name for ouput filename
+
     else:
-        base_dir = 'glm_stim1_halfdata.denoise'
+        base_dir = f'glm_stim1_{split_data}.denoise'
         if split_data == 'run_123':
             runs = range(1, 4)
         elif split_data == 'run_456':
             runs = range(4,7)
-        split_data = f'_{split_data}' # change name for ouput filename
     
     ims = sub.get_preprocessed_bold(session=session, runs=runs)
 
@@ -102,7 +103,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
     betas = results_glmsingle['typed']['betasmd']
     betas = image.new_img_like(ims[0], betas)
     betas = image.index_img(betas, slice(None, None, 2))
-    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-risk_space-T1w_desc-stims1_pe{split_data}.nii.gz'))
+    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe{split_data}.nii.gz'))
 
 
 if __name__ == '__main__':

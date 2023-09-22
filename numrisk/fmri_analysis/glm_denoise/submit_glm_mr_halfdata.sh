@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fit_st_denoise_halfdata
-#SBATCH --output=/home/mrenke/logs/fit_st_denoise_%A-%a.txt
+#SBATCH --output=/home/mrenke/logs/fit_denoise_halfdata_%A-%a.txt
 #SBATCH --ntasks=1
 #SBATCH -c 16
 #SBATCH --time=2:00:00
