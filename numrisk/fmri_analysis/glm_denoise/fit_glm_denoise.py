@@ -103,7 +103,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
     betas = results_glmsingle['typed']['betasmd']
     betas = image.new_img_like(ims[0], betas)
     betas = image.index_img(betas, slice(None, None, 2))
-    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe{split_data}.nii.gz'))
+    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe.nii.gz'))
 
 
 if __name__ == '__main__':
