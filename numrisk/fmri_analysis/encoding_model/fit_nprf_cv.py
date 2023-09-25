@@ -100,7 +100,7 @@ def main(subject,  bids_folder='/data/ds-dnumrisk', retroicor=False, smoothed=Fa
         target_fn = op.join(
             target_dir, f'sub-{subject}_ses-{session}_run-{test_run}_desc-r2.optim_space-T1w_pars.nii.gz')
 
-        masker.inverse_transform(optimizer.r2).to_filename(target_fn)
+        masker.inverse_transform(optimizer.r2).to_filename(target_fn) # save r2 maps
 
         cv_r2 = get_rsq(test_data, model.predict(parameters=optimizer.estimated_parameters,
                                                  paradigm=test_paradigm.astype(np.float32)))
@@ -108,14 +108,14 @@ def main(subject,  bids_folder='/data/ds-dnumrisk', retroicor=False, smoothed=Fa
         target_fn = op.join(
             target_dir, f'sub-{subject}_ses-{session}_run-{test_run}_desc-cvr2.optim_space-T1w_pars.nii.gz')
 
-        masker.inverse_transform(cv_r2).to_filename(target_fn)
+        masker.inverse_transform(cv_r2).to_filename(target_fn) # save cv-r2 maps
 
         for par, values in optimizer.estimated_parameters.T.iterrows():
             print(values)
             target_fn = op.join(
                 target_dir, f'sub-{subject}_ses-{session}_run-{test_run}_desc-{par}.optim_space-T1w_pars.nii.gz')
 
-            masker.inverse_transform(values).to_filename(target_fn)
+            masker.inverse_transform(values).to_filename(target_fn) # save parameter maps
 
         cv_r2s.append(cv_r2)
     
@@ -124,7 +124,7 @@ def main(subject,  bids_folder='/data/ds-dnumrisk', retroicor=False, smoothed=Fa
     target_fn = op.join(
         target_dir, f'sub-{subject}_ses-{session}_desc-cvr2.optim_space-T1w_pars.nii.gz')
 
-    masker.inverse_transform(cv_r2).to_filename(target_fn)
+    masker.inverse_transform(cv_r2).to_filename(target_fn) # save cv-r2 maps (all run mean)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

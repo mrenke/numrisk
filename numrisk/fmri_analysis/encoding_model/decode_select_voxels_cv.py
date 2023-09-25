@@ -18,10 +18,22 @@ stimulus_range = np.linspace(0, 6, 1000)
 space = 'T1w'
 
 def main(subject, smoothed, pca_confounds, bids_folder='/data',
-denoise=True, retroicor=False, mask='NPC_R'):
+denoise=True, retroicor=False, mask='NPC_R', split_data = None):
     
     session = 1
-    target_dir = op.join(bids_folder, 'derivatives', 'decoded_pdfs.volume.cv_vselect')
+
+    if split_data == None:
+        runs = range(1, 7)
+        split_data = ''
+    else:
+        if split_data == 'run_123':
+            runs = range(1, 4)
+        elif split_data == 'run_456':
+            runs = range(4,7)
+        split_data = f'_{split_data}' 
+
+    key = f'glm_stim1{split_data}'
+    target_dir = f'decoded_pdfs.volume.cv_vselect{split_data}'
 
     if denoise:
         target_dir += '.denoise'
@@ -38,7 +50,7 @@ denoise=True, retroicor=False, mask='NPC_R'):
     if pca_confounds:
         target_dir += '.pca_confounds'
 
-    target_dir = op.join(target_dir, f'sub-{subject}', 'func')
+    target_dir = op.join(bids_folder, 'derivatives', target_dir, f'sub-{subject}', 'func')
 
     if not op.exists(target_dir):
         os.makedirs(target_dir)
@@ -54,7 +66,6 @@ denoise=True, retroicor=False, mask='NPC_R'):
     print(data)
 
     pdfs = []
-    runs = range(1, 9)
 
     # SET UP GRID
     mus = np.log(np.linspace(5, 80, 60, dtype=np.float32))
@@ -62,12 +73,12 @@ denoise=True, retroicor=False, mask='NPC_R'):
     amplitudes = np.array([1.], dtype=np.float32)
     baselines = np.array([0], dtype=np.float32)
 
-    # select voxels (cv)
+    # select voxels double-loop (drop first loop test_data totally to use it in the decoding loop later)
     cv_r2s = []
     cv_keys = []
     for test_run in runs:
 
-        test_data, test_paradigm = data.loc[test_run].copy(), paradigm.loc[test_run].copy()
+        test_data, test_paradigm = data.loc[test_run].copy(), paradigm.loc[test_run].copy() # this data will only be used in the decoding loop later
         train_data, train_paradigm = data.drop(test_run, level='run').copy(), paradigm.drop(test_run, level='run').copy()
 
         for test_run2 in train_data.index.unique(level='run'):
@@ -110,7 +121,7 @@ denoise=True, retroicor=False, mask='NPC_R'):
     cv_r2s = cv_r2s.groupby(['test_run1']).mean()
     print(cv_r2s)
 
-    # get pdfs
+    # decoding loop 
     pdfs = []
     for test_run in runs:
 
