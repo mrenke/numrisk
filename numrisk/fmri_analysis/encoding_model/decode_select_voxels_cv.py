@@ -32,7 +32,6 @@ denoise=True, retroicor=False, mask='NPC_R', split_data = None):
             runs = range(4,7)
         split_data = f'_{split_data}' 
 
-    key = f'glm_stim1{split_data}'
     target_dir = f'decoded_pdfs.volume.cv_vselect{split_data}'
 
     if denoise:
@@ -56,12 +55,12 @@ denoise=True, retroicor=False, mask='NPC_R', split_data = None):
         os.makedirs(target_dir)
 
     sub = Subject(subject, bids_folder)
-    paradigm = sub.get_behavior_magjudge(drop_no_responses=False)
+    paradigm = sub.get_behavior_magjudge(drop_no_responses=False, runs=runs)
     paradigm['log(n1)'] = np.log(paradigm['n1'])
     paradigm = paradigm.droplevel(['subject'])
     paradigm = paradigm['log(n1)']
 
-    data = sub.get_single_trial_volume(session, roi=mask, smoothed=smoothed, pca_confounds=pca_confounds, denoise=denoise, retroicor=retroicor).astype(np.float32)
+    data = sub.get_single_trial_volume(session, roi=mask,split_data=split_data, smoothed=smoothed, pca_confounds=pca_confounds, denoise=denoise, retroicor=retroicor).astype(np.float32)
     data.index = paradigm.index
     print(data)
 
@@ -129,7 +128,7 @@ denoise=True, retroicor=False, mask='NPC_R', split_data = None):
         train_data, train_paradigm = data.drop(test_run, level='run').copy(), paradigm.drop(test_run, level='run').copy()
 
         pars = sub.get_prf_parameters_volume(session, cross_validated=True,
-        denoise=denoise, retroicor=retroicor,
+                denoise=denoise, retroicor=retroicor,
                 smoothed=smoothed, pca_confounds=pca_confounds,
                 run=test_run, roi=mask)
 
@@ -186,9 +185,12 @@ if __name__ == '__main__':
     parser.add_argument('--denoise', action='store_true')
     parser.add_argument('--retroicor', action='store_true')
     parser.add_argument('--mask', default='NPC_R')
+    parser.add_argument('--split_data', default=None)
+
     args = parser.parse_args()
 
     main(args.subject, args.smoothed, args.pca_confounds, # args.session,
             denoise=args.denoise,
             retroicor=args.retroicor,
-            bids_folder=args.bids_folder, mask=args.mask)
+            bids_folder=args.bids_folder, mask=args.mask,
+            split_data = args.split_data)

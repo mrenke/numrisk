@@ -112,12 +112,10 @@ class Subject(object):
         else:
             return pd.DataFrame([])
         
-    def get_behavior_magjudge(self, session=1, drop_no_responses=True):
+    def get_behavior_magjudge(self, session=1, drop_no_responses=True, runs = range(1, 7)):
 
-
-        df = pd.DataFrame()
-   
-        runs = range(1, 7)
+        df = pd.DataFrame()   
+        # runs = range(1, 7)
         for run in runs:
 
             fn = op.join(self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_events.tsv')
@@ -232,9 +230,10 @@ class Subject(object):
             denoise=False,
             smoothed=False,
             pca_confounds=False,
-            retroicor=False):
+            retroicor=False,
+            split_data = ''):
 
-        key= 'glm_stim1'
+        key= f'glm_stim1{split_data}'
 
         if denoise:
             key += '.denoise'
@@ -296,9 +295,10 @@ class Subject(object):
             cross_validated=True,
             hemi=None,
             roi=None,
-            space='fsnative'):
+            space='fsnative',
+            split_data = ''):
 
-        dir = 'encoding_model'
+        dir = f'encoding_model{split_data}'
         if cross_validated:
             if run is None:
                 raise Exception('Give run')
