@@ -1,6 +1,6 @@
 import argparse
 import os
-import pingouin
+#import pingouin
 import numpy as np
 import os.path as op
 import pandas as pd
@@ -17,9 +17,10 @@ stimulus_range = np.linspace(0, 6, 1000)
 # stimulus_range = np.log(np.arange(400))
 space = 'T1w'
 
-def main(subject, session, smoothed, pca_confounds, bids_folder='/data',
+def main(subject, smoothed, pca_confounds, bids_folder='/data',
 denoise=True, retroicor=False, mask='NPC_R'):
     
+    session = 1
     target_dir = op.join(bids_folder, 'derivatives', 'decoded_pdfs.volume.cv_vselect')
 
     if denoise:
@@ -61,9 +62,9 @@ denoise=True, retroicor=False, mask='NPC_R'):
     amplitudes = np.array([1.], dtype=np.float32)
     baselines = np.array([0], dtype=np.float32)
 
+    # select voxels (cv)
     cv_r2s = []
     cv_keys = []
-
     for test_run in runs:
 
         test_data, test_paradigm = data.loc[test_run].copy(), paradigm.loc[test_run].copy()
@@ -109,8 +110,8 @@ denoise=True, retroicor=False, mask='NPC_R'):
     cv_r2s = cv_r2s.groupby(['test_run1']).mean()
     print(cv_r2s)
 
+    # get pdfs
     pdfs = []
-
     for test_run in runs:
 
         test_data, test_paradigm = data.loc[test_run].copy(), paradigm.loc[test_run].copy()
@@ -153,8 +154,8 @@ denoise=True, retroicor=False, mask='NPC_R'):
         print(pdf)
         E = (pdf * pdf.columns).sum(1) / pdf.sum(1)
 
-        print(pd.concat((E, test_paradigm), axis=1))
-        print(pingouin.corr(E, test_paradigm))
+        #print(pd.concat((E, test_paradigm), axis=1))
+        #print(pingouin.corr(E, test_paradigm))
 
         pdfs.append(pdf)
 
@@ -167,7 +168,7 @@ denoise=True, retroicor=False, mask='NPC_R'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=None)
-    parser.add_argument('session', default=None)
+    #parser.add_argument('session', default=None)
     parser.add_argument('--bids_folder', default='/data')
     parser.add_argument('--smoothed', action='store_true')
     parser.add_argument('--pca_confounds', action='store_true')
@@ -176,7 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('--mask', default='NPC_R')
     args = parser.parse_args()
 
-    main(args.subject, args.session, args.smoothed, args.pca_confounds,
+    main(args.subject, args.smoothed, args.pca_confounds, # args.session,
             denoise=args.denoise,
             retroicor=args.retroicor,
             bids_folder=args.bids_folder, mask=args.mask)
