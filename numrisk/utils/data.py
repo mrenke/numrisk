@@ -91,7 +91,7 @@ class Subject(object):
 
         return im
 
-    def get_behavior(self, session = 1, drop_no_responses=True):
+    def get_behavior_risk(self, session = 1, drop_no_responses=True):
 
         df = []
         for format in ['non-symbolic', 'symbolic']:
@@ -111,44 +111,48 @@ class Subject(object):
             return self._cleanup_behavior(df, drop_no_responses=drop_no_responses)
         else:
             return pd.DataFrame([])
+        
+    def get_behavior_magjudge(self, session=1, drop_no_responses=True):
 
+
+        df = pd.DataFrame()
+   
+        runs = range(1, 7)
+        for run in runs:
+
+            fn = op.join(self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_events.tsv')
+
+            if op.exists(fn):
+                d = pd.read_csv(fn, sep='\t',
+                            index_col=['trial_nr', 'trial_type'])
+                d['subject'], d['run'] = int(self.subject), run 
+                #d = d.drop([0])
+                df = pd.concat([df, d])
+
+
+        df = df.reset_index().set_index(['subject','run','trial_type', 'trial_nr']) 
+        df = df.unstack('trial_type')
+
+        return self._cleanup_behavior(df,drop_no_responses=True)
+    
     @staticmethod
-    def _cleanup_behavior(df_, drop_no_responses=True):
-        df = df_[[]].copy()    
+    def _cleanup_behavior(df_,drop_no_responses=True):
+        df = df_[[]].copy()
+        df['rt'] = df_.loc[:, ('onset', 'choice')] - df_.loc[:, ('onset', 'stimulus 2')]
+        df['n1'], df['n2'] = df_['n1']['stimulus 1'], df_['n2']['stimulus 1']
+
         df['choice'] = df_[('choice', 'choice')]
-        df['n1'], df['n2'] = df_[('n1','stimulus')], df_[('n2','stimulus')]
-        df['prob1'], df['prob2'] = df_[('prob1','stimulus')], df_[('prob1','stimulus')]
+        df['chose_n2'] =  (df['choice'] == 2.0)
 
-        df['magjudgey_left'] = df_[('prob1', 'stimulus')] == 0.55
-        df['chose_magjudgey'] = (df['magjudgey_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
-        df.loc[df.choice.isnull(), 'chose_risky'] = np.nan
+        #df.loc[df.choice.isnull(), 'chose_risky'] = np.nan
 
-        df['n_risky'] = df['n1'].where(df['risky_left'], df['n2'])
-        df['n_safe'] = df['n2'].where(df['risky_left'], df['n1'])
-        df['frac'] = df['n_risky'] / df['n_safe']
-        df['log(risky/safe)'] = np.log(df['frac'])
+        df['frac'] = df['n2'] / df['n1']
+        df['log(n2/n1)'] = np.log(df['frac'])
 
         df['log(n1)'] = np.log(df['n1'])
-
-        if drop_no_responses:
-            df = df[~df.chose_risky.isnull()]
-            df['chose_risky'] = df['chose_risky'].astype(bool)
-
-        def get_risk_bin(d):
-            labels = [f'{int(e)}%' for e in np.linspace(20, 80, 6)]
-            try: 
-                # return pd.qcut(d, 6, range(1, 7))
-                return pd.qcut(d, 6, labels=labels)
-            except Exception as e:
-                n = len(d)
-                ix = np.linspace(0, 6, n, False)
-
-                d[d.sort_values().index] = [labels[e] for e in np.floor(ix).astype(int)]
-                
-                return d
-        df['bin(risky/safe)'] = df.groupby(['subject'], group_keys=False)['frac'].apply(get_risk_bin)
-
-        return df.droplevel(-1, 1)
+        df = df.droplevel(-1,1)
+        
+        return df
 
     def get_fmriprep_confounds(self, session, include=None):
 

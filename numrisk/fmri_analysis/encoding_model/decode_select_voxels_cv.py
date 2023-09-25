@@ -44,9 +44,9 @@ denoise=True, retroicor=False, mask='NPC_R'):
         os.makedirs(target_dir)
 
     sub = Subject(subject, bids_folder)
-    paradigm = sub.get_behavior(sessions=session, drop_no_responses=False)
+    paradigm = sub.get_behavior_magjudge(drop_no_responses=False)
     paradigm['log(n1)'] = np.log(paradigm['n1'])
-    paradigm = paradigm.droplevel(['subject', 'session'])
+    paradigm = paradigm.droplevel(['subject'])
     paradigm = paradigm['log(n1)']
 
     data = sub.get_single_trial_volume(session, roi=mask, smoothed=smoothed, pca_confounds=pca_confounds, denoise=denoise, retroicor=retroicor).astype(np.float32)
