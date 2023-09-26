@@ -148,7 +148,13 @@ class Subject(object):
         df['log(n2/n1)'] = np.log(df['frac'])
 
         df['log(n1)'] = np.log(df['n1'])
+
+        if drop_no_responses:
+            df = df[~df.chose_n2.isnull()]
+            df['chose_n2'] = df['chose_n2'].astype(bool)
+            
         df = df.droplevel(-1,1)
+
         
         return df
 
