@@ -6,6 +6,53 @@ from tqdm.contrib.itertools import product
 import matplotlib.pyplot as plt
 #import pingouin
 import seaborn as sns
+import scipy.stats as ss
+import numpy as np
+
+def invprobit(x):
+    return ss.norm.ppf(x)
+
+def extract_intercept_gamma(trace, model, data, group=False):
+
+    fake_data = get_fake_data(data, group)
+
+    pred = model.predict(trace, 'mean', fake_data, inplace=False, include_group_specific=not group)['posterior']['choice_mean']
+
+    pred = pred.to_dataframe().unstack([0, 1])
+    pred = pred.set_index(pd.MultiIndex.from_frame(fake_data))
+
+    #print(pred)
+    # return pred
+
+    pred0 = pred.xs(0, 0, 'x')
+
+    #print(pred0)
+    intercept = pd.DataFrame(invprobit(pred0), index=pred0.index, columns=pred0.columns)
+    gamma = invprobit(pred.xs(1, 0, 'x')) - intercept
+
+    intercept = pd.concat((intercept.droplevel(0, 1),), keys=['intercept'], axis=1)
+    gamma = pd.concat((gamma.droplevel(0, 1),), keys=['gamma'], axis=1)
+
+    return intercept, gamma
+
+
+def get_fake_data(data, group=False):
+
+    data = data.reset_index()
+
+    if group:
+        permutations = [[1]]
+    else:
+        permutations = [data['subject'].unique()]
+
+    permutations += [np.array([0., 1.])]
+    names=['subject', 'x']
+
+
+    fake_data = pd.MultiIndex.from_product(permutations, names=names).to_frame().reset_index(drop=True)
+
+    return fake_data
+
 
 def get_decoding_info(subject, session=1,  bids_folder='/data/ds-stressrisk', mask='NPC_R', n_voxels='select',
                       split_data = 'full'):
