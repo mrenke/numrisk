@@ -19,6 +19,6 @@ export PARTICIPANT_LABEL=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
 
 source activate tf2-gpu
 
-python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_number_voxels_cv.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise 
-python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_number_voxels_cv.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise --split_data run_123
-python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_number_voxels_cv.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise --split_data run_456
+python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_number_voxels.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise 
+python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_number_voxels.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise --split_data run_123
+python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_number_voxels.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise --split_data run_456
