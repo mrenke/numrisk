@@ -54,7 +54,7 @@ def cleanTS(sub, ses=1, runs = range(1, 7),space = 'fsaverage5', task = 'majduge
 
     return clean_ts_runs
 
-def fsavTofsav5(sub,ses = 1, task = 'majduge',  bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk'):
+def fsavTofsav5(sub,ses = 1, task = 'magjudge',  bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk'):
     # requires fsaverage and fsaverage5 directory in bids_folder/derivatives/freesurfer !
     runs = range(1,7)
 
