@@ -16,7 +16,7 @@ import nilearn.plotting as nplt
 import matplotlib.pyplot as plt
 
 
-def cleanTS(sub, ses=1, runs = range(1, 7),space = 'fsaverage5', task = 'majduge', bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk'):
+def cleanTS(sub, ses=1, runs = range(1, 7),space = 'fsaverage5', task = 'magjudge', bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk'):
     # load in data as timeseries and regress out confounds (for each run sepeprately)
     number_of_vertex = 20484  # 'fsaverage5', 10242 * 2
 
@@ -31,7 +31,7 @@ def cleanTS(sub, ses=1, runs = range(1, 7),space = 'fsaverage5', task = 'majduge
     
     if (os.path.exists(ex_file) == False):
         print(f'sub-{sub} fsaverage5.gii missing, fsavTofsav5 will be performed')
-        fsavTofsav5(sub,ses, bids_folder=bids_folder)
+        fsavTofsav5(sub,ses, bids_folder=bids_folder, task=task)
 
     for run in runs:
         timeseries = [None] * 2

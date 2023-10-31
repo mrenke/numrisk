@@ -13,6 +13,7 @@ from scipy.sparse.csgraph import connected_components
 from utils import cleanTS, get_basic_mask
 #from utils import fsavTofsav5,cleanTS, saveGradToNPFile, npFileTofs5Gii,fsav5Tofsnative
 ses=1
+n_components = 3
 
 def main(sub,bids_folder, kernel, approach): #specification, 
 
@@ -23,6 +24,7 @@ def main(sub,bids_folder, kernel, approach): #specification,
     clean_ts = cleanTS(sub, ses,bids_folder=bids_folder) #does fsavTofsav5 if fsav5.gii does not exist
     seed_ts = clean_ts[mask]
     correlation_measure = ConnectivityMeasure(kind='correlation')
+    np.save(op.join(target_folder,f'sub-{sub}_ses-{ses}_unfiltered_space-fsav5.npy'),correlation_measure) # 
     print('raw connectivity matrix estimated')
 
      # filter out nodes that are not connected to the rest
@@ -39,11 +41,11 @@ def main(sub,bids_folder, kernel, approach): #specification,
     correlation_measure = ConnectivityMeasure(kind='correlation')
     cm = correlation_measure.fit_transform([seed_ts.T])[0]
     target_folder = op.join(bids_folder,'derivatives','correlation_matrices') # save cm and mask for average_gm construction later
-    np.save(op.join(target_folder,f'sub-{sub}_ses-{ses}_filtered_space-fsav5_kernel-{kernel}_approach-{approach}.npy'),np.array([cm, mask])) # 
-    gm = GradientMaps(n_components=3, kernel = kernel, approach=approach,random_state=0)
+    np.save(op.join(target_folder,f'sub-{sub}_ses-{ses}_filtered_space-fsav5.npy'),np.array([cm, mask])) # 
+    gm = GradientMaps(n_components=n_components, kernel = kernel, approach=approach,random_state=0)
     gm.fit(cm)
 
-    grad = [None] * 2
+    grad = [None] * n_components
     for i, g in enumerate(gm.gradients_.T):
         grad[i] = map_to_labels(g, labeling_noParcel, mask=mask, fill=np.nan)
     
