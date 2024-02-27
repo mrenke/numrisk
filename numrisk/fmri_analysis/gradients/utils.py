@@ -80,6 +80,31 @@ def fsavTofsav5(sub,ses = 1, task = 'magjudge',  bids_folder='/Volumes/mrenkeED/
             r = sxfm.run()
 
 
+def saveGradToNPFile(grad, sub,ses, specification='',bids_folder='/Users/mrenke/data/ds-dnumrisk'):
+    target_dir = op.join(bids_folder, 'derivatives', 'gradients', f'sub-{sub}', f'ses-{ses}')
+
+    if not op.exists(target_dir):
+        os.makedirs(target_dir)
+
+    for g, n_grad  in enumerate(range(1,1+np.shape(grad)[0])):
+        np.save(op.join(target_dir,f'grad{n_grad}{specification}.npy'), grad[g])
+
+def npFileTofs5Gii(sub,ses, specification='',bids_folder='/Users/mrenke/data/ds-dnumrisk', gradient_Ns = [1,2,3]):
+    target_dir = op.join(bids_folder, 'derivatives', 'gradients', f'sub-{sub}', f'ses-{ses}')
+
+    for n_grad in gradient_Ns:
+        grad = np.load(op.join(target_dir, f'grad{n_grad}{specification}.npy'))
+        grad = np.split(grad,2) # for i, hemi in enumerate(['L', 'R']): --> left first
+
+        for h, hemi in enumerate(['L', 'R']):    
+
+            gii_im_datar = nib.gifti.gifti.GiftiDataArray(data=grad[h])
+            gii_im = nib.gifti.gifti.GiftiImage(darrays= [gii_im_datar])
+
+            out_file = op.join(target_dir, f'sub-{sub}_ses-{ses}_task-risk_space-fsaverage5_hemi-{hemi}_grad{n_grad}{specification}.surf.gii')
+            gii_im.to_filename(out_file) # https://nipy.org/nibabel/reference/nibabel.spatialimages.html
+
+
 def get_basic_mask():
     atlas = datasets.fetch_atlas_surf_destrieux()
     regions = atlas['labels'].copy()
@@ -92,3 +117,26 @@ def get_basic_mask():
     mask = ~np.isin(labeling, masked_labels)
     return mask, labeling_noParcel
 
+def plot_GM12_from_sum_npfile(file = 'gm_av50_unfiltered_aligned-marg.npy',bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk',grad_folder = 'derivatives/gradients', colorbar=False):
+
+    fsaverage = fetch_surf_fsaverage()
+
+    grad = np.load(op.join(bids_folder,grad_folder,file))
+    
+
+    grad1 = np.split(grad[0],2) # for i, hemi in enumerate(['L', 'R']): --> left first
+    grad2 = np.split(grad[1],2)
+    grad3 = np.split(grad[2],2)
+    
+    grad1_r = grad1[1] # 0 = left, 1 = right
+    grad2_r = grad2[1]  
+    grad3_r = grad3[1]
+
+    figure, axes = plt.subplots(nrows=1, ncols=3, subplot_kw=dict(projection='3d'))
+    nplt.plot_surf_stat_map(surf_mesh=fsaverage.infl_right, colorbar = colorbar,stat_map=grad1_r,cmap='viridis',view='medial',axes=axes[0])
+    axes[0].set(title='grad 1')
+    nplt.plot_surf_stat_map(surf_mesh=fsaverage.infl_right, colorbar = colorbar,stat_map=grad2_r,cmap='viridis',view='medial',axes=axes[1])
+    axes[1].set(title='grad 2')
+    nplt.plot_surf_stat_map(surf_mesh=fsaverage.infl_right, colorbar = colorbar,stat_map=grad3_r,cmap='viridis',view='medial',axes=axes[2])
+    axes[2].set(title='grad 3')
+    figure.suptitle(file)
