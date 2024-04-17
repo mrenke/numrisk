@@ -95,7 +95,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=None)
     parser.add_argument('--session', default=1)
-    parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumr')
+    parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumrisk')
     args = parser.parse_args()
 
     main(args.subject, args.session, args.bids_folder)
