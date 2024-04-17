@@ -35,11 +35,12 @@ def cleanup_behavior(df_, drop_no_responses=True):
         return df
 
 
-def get_behavior(subject_list, bids_folder = '/Users/mrenke/data/ds-dnumr'):
+def get_behavior(subject_list, bids_folder = '/Users/mrenke/data/ds-dnumrisk'):
     df_all = []
     session = 1
 
     for subject in subject_list:
+        #print(subject)
         df = []
         for format in ['non-symbolic', 'symbolic']:
 
@@ -48,7 +49,7 @@ def get_behavior(subject_list, bids_folder = '/Users/mrenke/data/ds-dnumr'):
             if op.exists(fn):
                 d = pd.read_csv(fn, sep='\t',
                             index_col=['trial_nr', 'trial_type'])
-                d['subject'], d['session'], d['format'] = subject, session, format
+                d['subject'], d['session'], d['format'] = int(subject), session, format
                 df.append(d)
 
         df = pd.concat(df)
