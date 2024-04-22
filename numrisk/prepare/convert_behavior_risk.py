@@ -33,6 +33,7 @@ def main(subject, session, bids_folder, max_rt=1.0):
         events = events[['trial_nr', 'onset', 'trial_type', 'prob1', 'prob2', 'n1', 'n2', 'choice']]
 
         fn = op.join(target_dir, f'sub-{subject}_ses-{session}_task-risk_{format}_events.tsv')
+        print(fn)
         events.to_csv(fn, index=False, sep='\t')
 
 

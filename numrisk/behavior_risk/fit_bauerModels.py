@@ -1,18 +1,16 @@
-
-
-# %%
 import argparse
 from bauer.models import RiskRegressionModel
-#from tms_risk.utils.data import get_all_behavior
-from stress_risk.utils.data import get_all_behavior
+
 import os.path as op
 import os
 import arviz as az
 import numpy as np
 import pandas as pd
-from utils import add_cond2df, build_model, get_behavior
 
-def main(model_label, burnin=1000, samples=1000, bids_folder = bids_folder = '/Users/mrenke/data/ds-dnumr'):
+from utils import get_data
+from utils_02 import build_model
+
+def main(model_label, burnin=1000, samples=1000, bids_folder = '/Users/mrenke/data/ds-dnumrisk',format='non-symbolic'):
 
     target_folder = op.join(bids_folder, 'derivatives', 'cogmodels')
     
@@ -20,9 +18,9 @@ def main(model_label, burnin=1000, samples=1000, bids_folder = bids_folder = '/U
         os.makedirs(target_folder)
 
     df = get_data(bids_folder)
+    df = df.xs(format,0, level='format')
 
-
-    if model_label in ['0', '5']:
+    if model_label in ['1', '2']:
         target_accept = 0.9
     else:
         target_accept = 0.8
@@ -31,13 +29,14 @@ def main(model_label, burnin=1000, samples=1000, bids_folder = bids_folder = '/U
     model.build_estimation_model()
     trace = model.sample(burnin, samples, target_accept=target_accept)
     az.to_netcdf(trace,
-                    op.join(target_folder, f'model-{model_label}_trace.netcdf'))
+                    op.join(target_folder, f'model-{model_label}_format-{format}_trace.netcdf'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('model_label', default=None)
-    parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-stressrisk')
+    parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumrisk')
+    parser.add_argument('--format', default='non-symbolic')
     args = parser.parse_args()
 
-    main(args.model_label, bids_folder=args.bids_folder)
+    main(args.model_label, bids_folder=args.bids_folder, format=args.format)
 
