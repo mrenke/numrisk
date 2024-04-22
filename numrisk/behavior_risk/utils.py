@@ -8,7 +8,7 @@ import arviz as az
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as ss
-
+from os import listdir
 
 
 def cleanup_behavior(df_, drop_no_responses=True):  
@@ -35,34 +35,53 @@ def cleanup_behavior(df_, drop_no_responses=True):
         return df
 
 
-def get_behavior(subject_list, bids_folder = '/Users/mrenke/data/ds-dnumr'):
+def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumrisk', formats=['non-symbolic', 'symbolic']):
     df_all = []
     session = 1
 
+    if subject_list is None:
+        subject_list = [f[4:] for f in listdir(bids_folder) if f[0:3] == 'sub' and len(f) == 6]
+        print(f'number of subjects found: {len(np.sort(subject_list))}')
+
     for subject in subject_list:
-        df = []
-        for format in ['non-symbolic', 'symbolic']:
-
-            fn = op.join(bids_folder, f'sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-risk_{format}_events.tsv')
-
-            if op.exists(fn):
+        format = 'non-symbolic'
+        fn = op.join(bids_folder, f'sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-risk_{format}_events.tsv')
+        if op.exists(fn):
+            df = []
+            for format in formats:
+                fn = op.join(bids_folder, f'sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-risk_{format}_events.tsv')
                 d = pd.read_csv(fn, sep='\t',
                             index_col=['trial_nr', 'trial_type'])
-                d['subject'], d['session'], d['format'] = subject, session, format
+                d['subject'], d['session'], d['format'] = int(subject), session, format
                 df.append(d)
-
-        df = pd.concat(df)
-        df = df.drop([0, 999])
-        df = df.reset_index().set_index(['subject', 'session', 'format', 'trial_nr', 'trial_type']) 
-        df = df.unstack('trial_type')
-
-        df = cleanup_behavior(df)
-        df_all.append(df)
+            df = pd.concat(df)
+            df = df.drop([0, 999])
+            df = df.reset_index().set_index(['subject', 'session', 'format', 'trial_nr', 'trial_type']) 
+            df = df.unstack('trial_type')
+            df = cleanup_behavior(df)
+            df_all.append(df)
+        else:
+            print(f'sub-{subject} failed: File not found: {fn}')
 
     df_all = pd.concat(df_all) 
     df_all.columns = df_all.columns.droplevel(1) #weird multiindex with "trial_type"
 
     return df_all
+
+def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
+    df = get_behavior(subject_list, bids_folder=bids_folder)
+    df['choice'] = df['choice'] == 2.0
+    df['p1'] = df['prob1']
+    df['p2'] = df['prob2']
+
+    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit&scan_scanned-final.csv'), header=0) #, index_col=0
+    df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
+    #df_participants=df_participants.loc[1:42,:]
+
+    df = df.join(df_participants['group'], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
+    df = df.dropna() # automatially removes subs without group assignment
+
+    return df
 
 def invprobit(x):
     return ss.norm.ppf(x)
@@ -98,3 +117,4 @@ def extract_rnp_precision(trace, model, data, format=False):
     gamma = invprobit(pred.xs(1, 0, 'x')) - intercept
 
     return intercept, gamma
+

@@ -9,7 +9,7 @@ from nilearn import image
 import numpy as np
 import json
 
-def main(subject, session, bids_folder='/Volumes/mrenkeED/data/ds-dnumr', task = 'magjudge'):
+def main(subject, session, bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk', task = 'magjudge'):
     sourcedata_root = op.join(bids_folder, 'sourcedata', 'mri',
     f'SNS_MRI_DNUMR_S{subject:05d}_{session:02d}')
 
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', type=int)
     parser.add_argument('--session', type=int, default=1)
-    parser.add_argument('--bids_folder', default='/Volumes/mrenkeED/data/ds-dnumr')
+    parser.add_argument('--bids_folder', default='/Volumes/mrenkeED/data/ds-dnumrisk')
     args = parser.parse_args()
 
     main(args.subject, args.session, bids_folder=args.bids_folder)

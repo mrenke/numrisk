@@ -1,12 +1,20 @@
 what worked best:
 
-# psychopy2
+# at Kispi stimulus computer (windows)
+problems with running python from Caroline's account. 
+--> Created "standalone python" (as copy from preexisting Psychopy installation - python 3.8)
+* installed from requirements.txt (with some removements (#) of mac-specific packages, mostly 'pyobv-...', but just look for error)
+* installed exptools 2 via getting folder from git (from gilles86), and then pip install (git command not on computer!)
+--> go into experiment folder, call "python" via= 'C:\"Program Files"\Psychopy202302\python.exe' (weird "" in pathname)
+
+# my computer 
+## psychopy2
 cd ~/Desktop/codes../psychopy/
 conda create --name psychopy2 --file psychopy2.txt
 conda activate psychopy2
 pip install git+https://github.com/Gilles86/exptools2 --no-deps
 
-# psychopy
+## psychopy
 also works, bit of a hassle (see at bottom)
 -------------------------------------------------------
 * run `pip install -r requirements.txt` until 

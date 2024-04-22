@@ -63,8 +63,9 @@ def get_decoding_info(subject, session=1,  bids_folder='/data/ds-stressrisk', ma
     if n_voxels =='select':
         key = f'decoded_pdfs.volume.cv_vselect{split_data_fold_name}.denoise'
         pdf = op.join(bids_folder, 'derivatives', key, f'sub-{subject}', 'func', f'sub-{subject}_ses-{session}_mask-{mask}_space-T1w_pars.tsv')
-    else:
-        pdf = op.join(bids_folder, 'derivatives', f'{key}.{n_voxels}voxels', f'sub-{subject}', 'func', f'sub-{subject}_ses-{session}_mask-{mask}_nvoxels-{n_voxels}_space-T1w_pars.tsv')
+    elif n_voxels == 100:
+        key = f'decoded_pdfs.volume.{n_voxels}voxels{split_data_fold_name}.denoise'
+        pdf = op.join(bids_folder, 'derivatives', key, f'sub-{subject}', 'func', f'sub-{subject}_ses-{session}_mask-{mask}_nvoxels-{n_voxels}_space-T1w_pars.tsv')
 
     if op.exists(pdf):
         pdf = pd.read_csv(pdf, sep='\t', index_col=[0])

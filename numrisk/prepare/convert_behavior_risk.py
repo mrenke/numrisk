@@ -33,6 +33,7 @@ def main(subject, session, bids_folder, max_rt=1.0):
         events = events[['trial_nr', 'onset', 'trial_type', 'prob1', 'prob2', 'n1', 'n2', 'choice']]
 
         fn = op.join(target_dir, f'sub-{subject}_ses-{session}_task-risk_{format}_events.tsv')
+        print(fn)
         events.to_csv(fn, index=False, sep='\t')
 
 
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=None)
     parser.add_argument('--session', default=1)
-    parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumr')
+    parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumrisk')
     args = parser.parse_args()
 
     main(args.subject, args.session, args.bids_folder)
