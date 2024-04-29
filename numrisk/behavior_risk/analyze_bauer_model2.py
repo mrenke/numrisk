@@ -28,9 +28,9 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-stressrisk', AUC=False,
     model = build_model(model_label, df)
     model.build_estimation_model()
 
-    idata = az.from_netcdf(op.join(bids_folder, f'derivatives/cogmodels/model-{model_label}_trace.netcdf'))
+    idata = az.from_netcdf(op.join(bids_folder, f'derivatives/cogmodels_risk/model-{model_label}_trace.netcdf'))
 
-    target_folder = op.join(bids_folder, f'derivatives/cogmodels/figures/{model_label}')
+    target_folder = op.join(bids_folder, f'derivatives/cogmodels_risk/figures/{model_label}')
     if not op.exists(target_folder):
         os.makedirs(target_folder)
 

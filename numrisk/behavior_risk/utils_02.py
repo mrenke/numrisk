@@ -12,13 +12,20 @@ import scipy.stats as ss
 
 
 def build_model(model_label, df):
-    if model_label == '1':
+    if model_label == '1': # same priors = probit model ?!
         model = RiskRegressionModel(df, 
                                     regressors = {'prior_mu':'group','evidence_sd':'group'},
                                     prior_estimate = 'shared',
                                     fit_seperate_evidence_sd = False,
                                     )
-    if model_label == '2':
+    if model_label == '2': # seperate priors
+        model = RiskRegressionModel(df,regressors={'risky_prior_mu':'group', 'risky_prior_std':'group',
+                                    'safe_prior_mu':'group', 'safe_prior_std':'group',
+                                    'evidence_sd':'group'},
+                                     prior_estimate='full',
+                                     fit_seperate_evidence_sd = False,
+                                     )
+    if model_label == '3':
         model = RiskLapseRegressionModel(df, 
                                     regressors = {'prior_mu':'group','evidence_sd':'group'},
                                     prior_estimate = 'shared',

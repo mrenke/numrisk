@@ -12,7 +12,7 @@ from utils_02 import build_model
 
 def main(model_label, burnin=1000, samples=1000, bids_folder = '/Users/mrenke/data/ds-dnumrisk',format='non-symbolic'):
 
-    target_folder = op.join(bids_folder, 'derivatives', 'cogmodels')
+    target_folder = op.join(bids_folder, 'derivatives', 'cogmodels_risk')
     
     if not op.exists(target_folder):
         os.makedirs(target_folder)
