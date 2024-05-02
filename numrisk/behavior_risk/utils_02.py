@@ -25,11 +25,28 @@ def build_model(model_label, df):
                                      prior_estimate='full',
                                      fit_seperate_evidence_sd = False,
                                      )
-    if model_label == '3':
+    if model_label == '3': #KLW model
+        model = RiskRegressionModel(df, 
+                                    regressors = {'prior_sd':'group', # there is no prior_mu in the klw model
+                                                  'evidence_sd':'group'},
+                                    prior_estimate = 'klw',
+                                    fit_seperate_evidence_sd = False,
+                                    )
+    if model_label == '4':
         model = RiskLapseRegressionModel(df, 
-                                    regressors = {'prior_mu':'group','evidence_sd':'group'},
-                                    prior_estimate = 'shared',
+                                    regressors = {'p_lapse':'group',
+                                                  'prior_sd':'group',
+                                                  'evidence_sd':'group'},
+                                    prior_estimate = 'klw',
                                     fit_seperate_evidence_sd = False,
                                     )
     return model
+
+
+def get_rnp(evidence_sd, prior_std, p=0.55):
+    beta = prior_std**2 / (evidence_sd**2 + prior_std**2)
+    return np.clip(np.exp(-(1./beta) * np.log(1./p)), 0, 1)
+
+
+
     

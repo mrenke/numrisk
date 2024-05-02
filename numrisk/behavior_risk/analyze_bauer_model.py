@@ -12,7 +12,7 @@ from bauer.utils.bayes import softplus
 import pandas as pd
 
 from utils import get_data
-from utils_02 import build_model #, plot_ppc
+from utils_02 import build_model, get_rnp
 
 def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic',col_wrap=5, only_ppc=False, # AUC=False,E_dif=False, 
 plot_traces=False):
@@ -68,6 +68,11 @@ plot_traces=False):
 
             plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'))
             plt.close()
+
+    if model.prior_estimate == 'klw':
+        idata.posterior['rnp'] = get_rnp(idata.posterior['evidence_sd'], idata.posterior['prior_std'])
+        idata.posterior['rnp_mu'] = get_rnp(idata.posterior['evidence_sd_mu'], idata.posterior['prior_std_mu'])
+
 
 
 

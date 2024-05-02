@@ -32,6 +32,22 @@ def cleanup_behavior(df_, drop_no_responses=True):
         if drop_no_responses:
             df = df[~df.chose_risky.isnull()]
             df['chose_risky'] = df['chose_risky'].astype(bool)
+
+        def get_risk_bin(d):
+            labels = [f'{int(e)}%' for e in np.linspace(20, 80, 6)]
+            try: 
+                # return pd.qcut(d, 6, range(1, 7))
+                return pd.qcut(d, 6, labels=labels)
+            except Exception as e:
+                n = len(d)
+                ix = np.linspace(0, 6, n, False)
+
+                d[d.sort_values().index] = [labels[e] for e in np.floor(ix).astype(int)]
+                
+                return d
+            
+        df['bin(risky/safe)'] = df.groupby(['subject'], group_keys=False)['frac'].apply(get_risk_bin)
+
         return df
 
 
@@ -86,7 +102,7 @@ def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
 def invprobit(x):
     return ss.norm.ppf(x)
 
-def extract_rnp_precision(trace, model, data, format=False):
+def extract_rnp_precision_old(trace, model, data, format=False):
 
     data = data.reset_index()
 
@@ -106,6 +122,38 @@ def extract_rnp_precision(trace, model, data, format=False):
                                                 ).to_frame().reset_index(drop=True)
 
     pred = model.predict(trace, 'mean', fake_data, inplace=False)['posterior']['chose_risky_mean']
+
+    pred = pred.to_dataframe().unstack([0, 1])
+    pred = pred.set_index(pd.MultiIndex.from_frame(fake_data))
+
+    # return pred
+
+    pred0 = pred.xs(0, 0, 'x')
+    intercept = pd.DataFrame(invprobit(pred0), index=pred0.index, columns=pred0.columns)
+    gamma = invprobit(pred.xs(1, 0, 'x')) - intercept
+
+    return intercept, gamma
+
+def extract_rnp_precision(trace, model, data, format=False, group=False,risky_left=False):
+
+    data = data.reset_index()
+
+    reg_list = [data.reset_index()['subject'].unique(),[0, 1], data['n_safe'].unique()]
+    names=['subject', 'x', 'n_safe']
+    
+    if format:
+        reg_list.append(data['format'].unique())
+        names.append('format')
+    if group:
+        reg_list.append(data['group'].unique())
+        names.append('group')   
+    if risky_left:
+        reg_list.append([False, True])
+        names.append('risky_left')
+
+    fake_data = pd.MultiIndex.from_product(reg_list,names=names).to_frame().reset_index(drop=True)
+    include_group_specific = not group
+    pred = model.predict(trace, 'mean', fake_data, inplace=False, include_group_specific=include_group_specific)['posterior']['chose_risky_mean']
 
     pred = pred.to_dataframe().unstack([0, 1])
     pred = pred.set_index(pd.MultiIndex.from_frame(fake_data))
