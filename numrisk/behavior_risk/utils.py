@@ -16,7 +16,7 @@ def cleanup_behavior(df_, drop_no_responses=True):
         df = df_[[]].copy()    
         df['choice'] = df_[('choice', 'choice')]
         df['n1'], df['n2'] = df_[('n1','stimulus')], df_[('n2','stimulus')]
-        df['prob1'], df['prob2'] = df_[('prob1','stimulus')], df_[('prob1','stimulus')]
+        df['prob1'], df['prob2'] = df_[('prob1','stimulus')], df_[('prob2','stimulus')]
 
         df['risky_left'] = df_[('prob1', 'stimulus')] == 0.55
         df['chose_risky'] = (df['risky_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
@@ -57,7 +57,7 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
 
     if subject_list is None:
         subject_list = [f[4:] for f in listdir(bids_folder) if f[0:3] == 'sub' and len(f) == 6]
-        print(f'number of subjects found: {len(np.sort(subject_list))}')
+        #print(f'number of subjects found: {len(np.sort(subject_list))}') # only number of folders, not this specific data
 
     for subject in subject_list:
         format = 'non-symbolic'
@@ -86,9 +86,13 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
 
 def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
     df = get_behavior(subject_list, bids_folder=bids_folder)
-    df['choice'] = df['choice'] == 2.0
-    df['p1'] = df['prob1']
-    df['p2'] = df['prob2']
+
+    # make colum settings compatible for bauer model fitting
+    df['choice'] = df['chose_risky'] #df['choice'] == 2.0
+    df['p1'] = 1 #df['prob1']
+    df['p2'] = 0.55 #df['prob2']
+    df['n1'] = df['n_safe']
+    df['n2'] = df['n_risky']
 
     df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit&scan_scanned-final.csv'), header=0) #, index_col=0
     df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
@@ -96,7 +100,10 @@ def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
 
     df = df.join(df_participants['group'], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
     df = df.dropna() # automatially removes subs without group assignment
-
+    n_subs = len(df.index.unique('subject').sort_values())
+    print(f'number of subjects in dataframe: {n_subs}')
+    print(df.index.unique('subject').sort_values())
+    
     return df
 
 def invprobit(x):

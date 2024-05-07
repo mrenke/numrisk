@@ -51,15 +51,16 @@ def plot_ppc(df, ppc, plot_type=1, var_name='ll_bernoulli', level='subject', col
 
     if level == 'group':
         ppc = ppc.groupby(['subject', 'group']+groupby).mean()
+        groupby = ['group'] + groupby
 
     if level == 'subject':
         groupby = ['subject'] + groupby
 
     # print(ppc)
     ppc_summary = summarize_ppc(ppc, groupby=groupby)
-    print(ppc_summary)
+    #print(ppc_summary)
     p = df.groupby(groupby).mean()[['chose_risky']]
-    print(p)
+    #print(p)
     # ppc_summary = pd.concat((p, ppc_summary), axis=1).sort_index()
     ppc_summary = ppc_summary.join(p).reset_index()
 
@@ -108,7 +109,7 @@ def plot_ppc(df, ppc, plot_type=1, var_name='ll_bernoulli', level='subject', col
         if level == 'subject':
             fac.map(lambda *args, **kwargs: plt.axvline(np.log(1./.55), c='k', ls='--'))
         else:
-            fac.map(lambda *args, **kwargs: plt.axvline(3.5, c='k', ls='--'))
+            fac.map(lambda *args, **kwargs: plt.axvline(2.5, c='k', ls='--'))
             plt.xticks([])
 
     

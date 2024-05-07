@@ -35,15 +35,20 @@ plot_traces=False):
         az.plot_trace(idata, var_names=['~p'])
         plt.savefig(op.join(target_folder, 'traces.pdf'))
 
+    if model.prior_estimate == 'klw':
+        idata.posterior['rnp'] = get_rnp(idata.posterior['evidence_sd'], idata.posterior['prior_sd'])
+        idata.posterior['rnp_mu'] = get_rnp(idata.posterior['evidence_sd_mu'], idata.posterior['prior_sd_mu'])
+        model.free_parameters['rnp'] = '' # appending to a dictionary
 
     for par in model.free_parameters:
         traces = idata.posterior[par+'_mu'].to_dataframe()
 
+        par_helper = par if par != 'rnp' else 'evidence_sd'
 
-        for regressor, t in traces.groupby(par+'_regressors'):
+        for regressor, t in traces.groupby(par_helper+'_regressors'):
             t = t.copy()
             print(regressor, t)
-            if (par in ['prior_std', 'evidence_sd']) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
+            if (par in ['prior_sd', 'evidence_sd']) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
                 t = softplus(t)
 
             plt.figure()
@@ -56,22 +61,21 @@ plot_traces=False):
             else:
                 if par == 'risky_prior_mu':
                     plt.axvline(np.log(df['n_risky']).mean(), c='k', ls='--')
-                elif par == 'risky_prior_std':
+                elif par == 'risky_prior_sd':
                     plt.axvline(np.log(df['n_risky']).std(), c='k', ls='--')
                 elif par == 'safe_prior_mu':
                     for n_safe in np.log([7., 10., 14., 20., 28.]):
                         plt.axvline(n_safe, c='k', ls='--')
 
                     plt.axvline(np.log(df['n_safe']).mean(), c='k', ls='--', lw=2)
-                elif par == 'safe_prior_std':
+                elif par == 'safe_prior_sd':
                     plt.axvline(np.log(df['n_safe']).std(), c='k', ls='--')
 
             plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'))
             plt.close()
 
-    if model.prior_estimate == 'klw':
-        idata.posterior['rnp'] = get_rnp(idata.posterior['evidence_sd'], idata.posterior['prior_std'])
-        idata.posterior['rnp_mu'] = get_rnp(idata.posterior['evidence_sd_mu'], idata.posterior['prior_std_mu'])
+
+
 
 
 
