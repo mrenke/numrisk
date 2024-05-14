@@ -2,7 +2,7 @@ import os.path as op
 import os
 import numpy as np
 import pandas as pd
-from bauer.models import RiskRegressionModel, RiskLapseRegressionModel
+from bauer.models import RiskRegressionModel, RiskLapseRegressionModel, FlexibleSDRiskRegressionModel
 #from stress_risk.utils.data import get_all_behavior
 import arviz as az
 import matplotlib.pyplot as plt
@@ -38,6 +38,12 @@ def build_model(model_label, df):
                                                   'prior_sd':'group',
                                                   'evidence_sd':'group'},
                                     prior_estimate = 'klw',
+                                    fit_seperate_evidence_sd = False,
+                                    )
+    if model_label == '5': # skeleton
+        model = FlexibleSDRiskRegressionModel(df, 
+                                    regressors = {}, # not ready anyway
+                                    prior_estimate = 'shared',
                                     fit_seperate_evidence_sd = False,
                                     )
     return model
