@@ -26,7 +26,6 @@ def build_model(model_label, df):
     if model_label == '1': # same priors = probit model ?!
         model = MagnitudeComparisonRegressionModel(df, 
                                     regressors = {'n1_evidence_sd':'group', 'n2_evidence_sd':'group'},
-                                                  #'prior_mu':'group','prior_sd':'group'
                                     fit_prior=False,
                                     fit_seperate_evidence_sd = True, 
                                     memory_model='independent',
@@ -62,5 +61,13 @@ def build_model(model_label, df):
                                     fit_seperate_evidence_sd = True, 
                                     memory_model='shared_perceptual_noise',
                                     )
+    if model_label == '6':
+        model = MagnitudeComparisonRegressionModel(df, 
+                                    regressors = {'prior_sd':'group'},
+                                    fit_prior=True,
+                                    fit_seperate_evidence_sd = True, 
+                                    memory_model='independent',
+                                    )
+
 
     return model                              

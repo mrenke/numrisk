@@ -43,15 +43,20 @@ plot_traces=False):
         for regressor, t in traces.groupby(par+'_regressors'):
             t = t.copy()
             print(regressor, t)
-            if (any(substr in par for substr in ['prior_std', 'evidence_sd'])) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
+            if (any(substr in par for substr in ['_sd'])) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
                 t = softplus(t)
 
             plt.figure()
             sns.kdeplot(t, fill=True)
-            if regressor != 'Intercept':
+            if regressor != 'Intercept': # for effects, compare to 0 !
                 plt.axvline(0.0, c='k', ls='--')
                 txt = f'p({par} < 0.0) = {np.round((t.values < 0.0).mean(), 3)}'
                 plt.xlabel(txt)
+            if (par == 'prior_mu') & (regressor == 'Intercept'): # plot true prior mean
+                # np.log((df.n1.mean()+df.n2.mean()) / 2)
+                # gilles code: np.log(df['n_risky']).mean(), so first log, then mean...
+                true_prior_mu = ((np.log(df.n1).mean() +np.log(df.n2).mean()) / 2) 
+                plt.axvline(true_prior_mu, c='k', ls='--')
 
             #else:
                 #if par == 'risky_prior_mu':

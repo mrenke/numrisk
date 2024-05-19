@@ -10,7 +10,7 @@ import pymc as pm
 from utils import get_data
 from utils_02 import build_model
 
-def main(model_label, burnin=2000, samples=2000, bids_folder = '/Users/mrenke/data/ds-dnumrisk'):
+def main(model_label, burnin=3000, samples=2000, bids_folder = '/Users/mrenke/data/ds-dnumrisk'):
     
     target_folder = op.join(bids_folder, 'derivatives', 'cogmodels_magjudge')
     
@@ -20,7 +20,7 @@ def main(model_label, burnin=2000, samples=2000, bids_folder = '/Users/mrenke/da
     df = get_data(bids_folder)
     df.reset_index('run', inplace=True) 
 
-    target_accept = 0.9
+    target_accept = 0.95
 
     model = build_model(model_label, df)
     model.build_estimation_model()
