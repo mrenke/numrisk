@@ -141,25 +141,24 @@ def extract_rnp_precision_old(trace, model, data, format=False):
 
     return intercept, gamma
 
-def extract_rnp_precision(trace, model, data, format=False, group=False,risky_left=False):
+def extract_rnp_precision(trace, model, data, format=True, group_level = False):
 
     data = data.reset_index()
 
-    reg_list = [data.reset_index()['subject'].unique(),[0, 1], data['n_safe'].unique()]
-    names=['subject', 'x', 'n_safe']
-    
+    reg_list = [data.reset_index()['subject'].unique(),[0, 1], data['n1'].unique(), data['group'].unique()]
+    names=['subject', 'x', 'n_safe','group']
+
     if format:
         reg_list.append(data['format'].unique())
         names.append('format')
-    if group:
-        reg_list.append(data['group'].unique())
-        names.append('group')   
-    if risky_left:
-        reg_list.append([False, True])
-        names.append('risky_left')
+
+    if group_level: # needed 
+        include_group_specific = None
+    else:     # when no subjects! include_group_specific=False
+        include_group_specific = True 
 
     fake_data = pd.MultiIndex.from_product(reg_list,names=names).to_frame().reset_index(drop=True)
-    include_group_specific = not group
+
     pred = model.predict(trace, 'mean', fake_data, inplace=False, include_group_specific=include_group_specific)['posterior']['chose_risky_mean']
 
     pred = pred.to_dataframe().unstack([0, 1])

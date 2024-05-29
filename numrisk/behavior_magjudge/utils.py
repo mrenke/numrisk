@@ -57,13 +57,13 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
     return df_all
 
 
-def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
+def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None, include_var = ['group']):
     df = get_behavior(subject_list, bids_folder=bids_folder)
 
     df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit&scan_scanned-final.csv'), header=0) #, index_col=0
     df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
-
-    df = df.join(df_participants['group'], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
+    
+    df = df.join(df_participants[include_var], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
     df = df.dropna() # automatially removes subs without group assignment
     n_subs = len(df.index.unique('subject').sort_values())
     print(f'number of subjects in dataframe: {n_subs}')
@@ -76,19 +76,20 @@ def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
 def invprobit(x):
     return ss.norm.ppf(x)
 
-def extract_rnp_precision(trace, model, data, group=False):
+def extract_rnp_precision(trace, model, data, group_level = False):
 
     data = data.reset_index()
 
-    reg_list = [data.reset_index()['subject'].unique(),[0, 1], data['n1'].unique()]
-    names=['subject', 'x', 'n1']
+    reg_list = [data.reset_index()['subject'].unique(),[0, 1], data['n1'].unique(), data['group'].unique()]
+    names=['subject', 'x', 'n1','group']
     
-    if group:
-        reg_list.append(data['group'].unique())
-        names.append('group')   
+    if group_level: # needed 
+        include_group_specific = None
+    else:     # when no subjects! include_group_specific=False
+        include_group_specific = True 
 
     fake_data = pd.MultiIndex.from_product(reg_list,names=names).to_frame().reset_index(drop=True)
-    include_group_specific = not group
+
     pred = model.predict(trace, 'mean', fake_data, inplace=False, include_group_specific=include_group_specific)['posterior']['chose_n2_mean']
 
     pred = pred.to_dataframe().unstack([0, 1])
