@@ -37,7 +37,12 @@ def main(subject, bids_folder, hemi, roi):
     im = to_image(image_clear(im, fill=0.0), dtype=np.int)
 
     print('Generating volume...')
-    new_im = sub.cortex_to_image((np.zeros(sub.lh.vertex_count), mask_data), # must give datarray for left and right (here: one is mask and other array with only 0s/False)
+    if hemi == 'L':
+        mask_data = (mask_data, np.zeros(sub.rh.vertex_count))
+    elif hemi == 'R':
+        mask_data = (np.zeros(sub.lh.vertex_count), mask_data)
+
+    new_im = sub.cortex_to_image(mask_data, # must give datarray for left and right (here: one is mask and other array with only 0s/False)
             im,
             hemi=None,
             method='nearest',
@@ -50,7 +55,7 @@ def main(subject, bids_folder, hemi, roi):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=None)
-    parser.add_argument('--bids_folder', default='/Volumes/mrenkeED/data/ds-dnumr')
+    parser.add_argument('--bids_folder', default='/Volumes/mrenkeED/data/ds-dnumrisk')
     parser.add_argument('--hemi', default='R')
     parser.add_argument('--roi', default ='ips')
     args = parser.parse_args()
