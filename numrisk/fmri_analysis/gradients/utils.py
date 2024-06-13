@@ -14,7 +14,54 @@ from brainspace.utils.parcellation import map_to_labels
 from  nilearn.datasets import fetch_surf_fsaverage
 import nilearn.plotting as nplt
 import matplotlib.pyplot as plt
-#from utils_02 import get_events_confounds
+
+def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumrisk',task='magjudge' ):
+    tr = 2.3 # repetition Time
+    n = 135  # number of slices
+    df_events = pd.read_csv(op.join(bids_folder, f'sub-{sub}', f'ses-{ses}', 'func', f'sub-{sub}_ses-{ses}_task-{task}_run-{run}_events.tsv'.format(sub=sub, ses=ses)), sep='\t') # before run was ot interated over (run-1)
+    
+    stimulus1 = df_events.loc[df_events['trial_type'] == 'stimulus 1', ['onset', 'trial_nr', 'trial_type', 'n1']]
+    stimulus1['duration'] = 0.6 + 0.8
+    stimulus1['onset'] = stimulus1['onset'] - 0.8 # cause we want to take the onset of the piechart 
+    stimulus1['stim_order'] = int(1)
+    stimulus1_int = stimulus1.copy()
+    stimulus1_int['trial_type'] = 'stimulus1_int'
+    stimulus1_int['modulation'] = 1
+    stimulus1_mod= stimulus1.copy()
+    stimulus1_mod['trial_type'] = 'stimulus1_mod'
+    stimulus1_mod['modulation'] = stimulus1['n1']
+
+    #choices = df_events.xs('choice', 0, 'trial_type', drop_level=False).reset_index('trial_type')[['onset', 'trial_nr', 'trial_type', 'n2']]
+    choices = df_events.loc[df_events['trial_type'] == 'choice']
+
+    #stimulus2 = df_events.xs('stimulus 2', 0, 'trial_type', drop_level=False).reset_index('trial_type')[['onset', 'trial_nr', 'trial_type', 'n2']]
+    stimulus2 = df_events.loc[df_events['trial_type'] == 'stimulus 2', ['onset', 'trial_nr', 'trial_type', 'n2']]
+    stimulus2['duration'] = choices.set_index('trial_nr')['onset']- stimulus2.set_index('trial_nr')['onset'] + 0.6 # 0.6 + 0.6 ## looked at the data, is is different for stim 1 and 2... ?!!
+    stimulus2['onset'] = stimulus2['onset'] - 0.6
+    stimulus2['stim_order'] = int(2)
+    stimulus2_int = stimulus2.copy()
+    stimulus2_int['trial_type'] = 'stimulus2_int'
+    stimulus2_int['modulation'] = 1
+    stimulus2_mod= stimulus2.copy()
+    stimulus2_mod['trial_type'] = 'stimulus2_mod'
+    stimulus2_mod['modulation'] = stimulus2['n2']
+
+    events = pd.concat((stimulus1_int,stimulus1_mod, stimulus2_int, stimulus2_mod)).set_index(['trial_nr','stim_order'],append=True).sort_index()
+
+    onsets = events[['onset', 'duration', 'trial_type', 'modulation']]
+    onsets['onset'] = ((onsets['onset']+tr/2.) // 2.3) * 2.3
+
+    frametimes = np.linspace(tr/2., (n - .5)*tr, n)
+
+    from nilearn.glm.first_level import make_first_level_design_matrix
+    dm = make_first_level_design_matrix(frametimes, onsets, 
+                                        hrf_model='spm + derivative + dispersion', 
+                                        oversampling=100.,drift_order=1, 
+                                        drift_model=None).drop('constant', axis=1)
+    dm /= dm.max()
+    print('Design matrix created to remove task effects. shape:')
+    print(dm.shape)
+    return dm
 
 def cleanTS(sub, ses, remove_task_effects = False, runs = range(1, 7),space = 'fsaverage5', bids_folder='/Users/mrenke/data/ds-dnumrisk', task = 'magjudge'):
     # load in data as timeseries and regress out confounds (for each run sepeprately)
