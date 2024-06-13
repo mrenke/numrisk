@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 
 def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumrisk',task='magjudge' ):
     tr = 2.3 # repetition Time
-    n = 135  # number of slices
+    n = 188 # number of slices # adjust this important!!
+
     df_events = pd.read_csv(op.join(bids_folder, f'sub-{sub}', f'ses-{ses}', 'func', f'sub-{sub}_ses-{ses}_task-{task}_run-{run}_events.tsv'.format(sub=sub, ses=ses)), sep='\t') # before run was ot interated over (run-1)
     
     stimulus1 = df_events.loc[df_events['trial_type'] == 'stimulus 1', ['onset', 'trial_nr', 'trial_type', 'n1']]
@@ -36,7 +37,8 @@ def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumr
 
     #stimulus2 = df_events.xs('stimulus 2', 0, 'trial_type', drop_level=False).reset_index('trial_type')[['onset', 'trial_nr', 'trial_type', 'n2']]
     stimulus2 = df_events.loc[df_events['trial_type'] == 'stimulus 2', ['onset', 'trial_nr', 'trial_type', 'n2']]
-    stimulus2['duration'] = choices.set_index('trial_nr')['onset']- stimulus2.set_index('trial_nr')['onset'] + 0.6 # 0.6 + 0.6 ## looked at the data, is is different for stim 1 and 2... ?!!
+    stimulus2 = stimulus2.set_index('trial_nr')
+    stimulus2['duration'] = choices.set_index('trial_nr')['onset']- stimulus2['onset'] + 0.6 # 0.6 + 0.6 ## looked at the data, is is different for stim 1 and 2... ?!!
     stimulus2['onset'] = stimulus2['onset'] - 0.6
     stimulus2['stim_order'] = int(2)
     stimulus2_int = stimulus2.copy()
@@ -45,6 +47,8 @@ def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumr
     stimulus2_mod= stimulus2.copy()
     stimulus2_mod['trial_type'] = 'stimulus2_mod'
     stimulus2_mod['modulation'] = stimulus2['n2']
+    stimulus2_int.reset_index(inplace=True)
+    stimulus2_mod.reset_index(inplace=True)
 
     events = pd.concat((stimulus1_int,stimulus1_mod, stimulus2_int, stimulus2_mod)).set_index(['trial_nr','stim_order'],append=True).sort_index()
 

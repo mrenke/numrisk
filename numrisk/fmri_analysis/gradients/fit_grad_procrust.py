@@ -26,7 +26,7 @@ def main(sub,ses,bids_folder,remove_task_effects, specification,save_cm_unfilter
     remove_task_effects_spec = '_removed-taskeffect' if remove_task_effects else ''
     print(remove_task_effects_spec)
 
-    specification = remove_task_effects_spec + align_spec + specification
+    specification = align_spec + remove_task_effects_spec + specification
 
     mask, labeling_noParcel = get_basic_mask()
 
