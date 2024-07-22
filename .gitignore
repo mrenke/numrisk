@@ -57,6 +57,8 @@ experiment/settings/*
 experiment_risk/logs/*
 experiment_risk/settings/*
 
+experiment_SMILE/logs/*
+experiment_SMILE/settings/*
 ._*
 *output.nipype
 *.job
