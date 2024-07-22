@@ -12,7 +12,7 @@ def run_experiment(session_cls, task, use_runs=True, subject=None, session=None,
     parser = argparse.ArgumentParser()
     parser.add_argument('subject', default=subject, nargs='?')
     parser.add_argument('session', default=session, nargs='?')
-    parser.add_argument('run', default=run, nargs='?')
+    parser.add_argument('run', default=run, nargs='?', type=int)
     parser.add_argument('--settings', default=settings, nargs='?')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--speedup', action='store_true')
