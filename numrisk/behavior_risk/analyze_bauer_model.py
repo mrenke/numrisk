@@ -16,7 +16,7 @@ from utils_02 import build_model, get_rnp
 
 def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic',col_wrap=5, only_ppc=False, # AUC=False,E_dif=False, 
 plot_traces=False):
-
+    sns.set_context('talk')
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
@@ -48,7 +48,7 @@ plot_traces=False):
         for regressor, t in traces.groupby(par_helper+'_regressors'):
             t = t.copy()
             print(regressor, t)
-            if (par in ['prior_sd', 'evidence_sd']) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
+            if ('sd' in par) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
                 t = softplus(t)
 
             plt.figure()
@@ -70,8 +70,9 @@ plot_traces=False):
                     plt.axvline(np.log(df['n_safe']).mean(), c='k', ls='--', lw=2)
                 elif par == 'safe_prior_sd':
                     plt.axvline(np.log(df['n_safe']).std(), c='k', ls='--')
-
-            plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'))
+            
+            sns.despine()
+            plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'), bbox_inches='tight')
             plt.close()
 
 

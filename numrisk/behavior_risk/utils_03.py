@@ -98,6 +98,12 @@ def plot_ppc(df, ppc, plot_type=1, var_name='ll_bernoulli', level='subject', col
                             hue='format',
                             col_wrap=col_wrap if level == 'subject' else None)
 
+    if plot_type in [3]:
+        fac = sns.FacetGrid(ppc_summary,
+                            col=col_level,
+                            hue='n_safe',
+                            col_wrap=col_wrap if level == 'subject' else None)
+
 
     #print("X", x)
     if plot_type in [1,2,3, 5]:
