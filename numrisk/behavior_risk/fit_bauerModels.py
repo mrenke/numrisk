@@ -6,13 +6,14 @@ import os
 import arviz as az
 import numpy as np
 import pandas as pd
+import pymc as pm
 
 from utils import get_data
 from utils_02 import build_model
 
-def main(model_label, burnin=1000, samples=1000, bids_folder = '/Users/mrenke/data/ds-dnumrisk',format='non-symbolic'):
+def main(model_label, burnin=2000, samples=2000, bids_folder = '/Users/mrenke/data/ds-dnumrisk',format='non-symbolic'):
 
-    target_folder = op.join(bids_folder, 'derivatives', 'cogmodels')
+    target_folder = op.join(bids_folder, 'derivatives', 'cogmodels_risk')
     
     if not op.exists(target_folder):
         os.makedirs(target_folder)
@@ -20,14 +21,19 @@ def main(model_label, burnin=1000, samples=1000, bids_folder = '/Users/mrenke/da
     df = get_data(bids_folder)
     df = df.xs(format,0, level='format')
 
-    if model_label in ['1', '2']:
-        target_accept = 0.9
-    else:
-        target_accept = 0.8
+    # different evidences for safe (n1) & risky (n2) options: everything already coded so that n1 always safe and n2 always risky & choice = chose_risky
+    if any(char in model_label for char in ['6', '7'])  : # unnecessary 
+        print('different evidences for safe (n1) & risky (n2) options!')
+
+    target_accept = 0.9
 
     model = build_model(model_label, df)
     model.build_estimation_model()
     trace = model.sample(burnin, samples, target_accept=target_accept)
+    
+    with model.estimation_model:
+        pm.compute_log_likelihood(trace)
+
     az.to_netcdf(trace,
                     op.join(target_folder, f'model-{model_label}_format-{format}_trace.netcdf'))
 

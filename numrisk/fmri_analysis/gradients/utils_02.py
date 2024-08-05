@@ -85,3 +85,4 @@ def get_GMmargulies_cmap(skewed=True):
     mymap = colors.LinearSegmentedColormap.from_list('my_colormap', cols)
     return mymap
 # from : /Users/mrenke/git/gradient_analysis/03_visualize_embeddings.ipynb
+

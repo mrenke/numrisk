@@ -16,7 +16,7 @@ def cleanup_behavior(df_, drop_no_responses=True):
         df = df_[[]].copy()    
         df['choice'] = df_[('choice', 'choice')]
         df['n1'], df['n2'] = df_[('n1','stimulus')], df_[('n2','stimulus')]
-        df['prob1'], df['prob2'] = df_[('prob1','stimulus')], df_[('prob1','stimulus')]
+        df['prob1'], df['prob2'] = df_[('prob1','stimulus')], df_[('prob2','stimulus')]
 
         df['risky_left'] = df_[('prob1', 'stimulus')] == 0.55
         df['chose_risky'] = (df['risky_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
@@ -32,6 +32,22 @@ def cleanup_behavior(df_, drop_no_responses=True):
         if drop_no_responses:
             df = df[~df.chose_risky.isnull()]
             df['chose_risky'] = df['chose_risky'].astype(bool)
+
+        def get_risk_bin(d):
+            labels = [f'{int(e)}%' for e in np.linspace(20, 80, 6)]
+            try: 
+                # return pd.qcut(d, 6, range(1, 7))
+                return pd.qcut(d, 6, labels=labels)
+            except Exception as e:
+                n = len(d)
+                ix = np.linspace(0, 6, n, False)
+
+                d[d.sort_values().index] = [labels[e] for e in np.floor(ix).astype(int)]
+                
+                return d
+            
+        df['bin(risky/safe)'] = df.groupby(['subject'], group_keys=False)['frac'].apply(get_risk_bin)
+
         return df
 
 
@@ -41,7 +57,7 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
 
     if subject_list is None:
         subject_list = [f[4:] for f in listdir(bids_folder) if f[0:3] == 'sub' and len(f) == 6]
-        print(f'number of subjects found: {len(np.sort(subject_list))}')
+        #print(f'number of subjects found: {len(np.sort(subject_list))}') # only number of folders, not this specific data
 
     for subject in subject_list:
         format = 'non-symbolic'
@@ -70,23 +86,30 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
 
 def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
     df = get_behavior(subject_list, bids_folder=bids_folder)
-    df['choice'] = df['choice'] == 2.0
-    df['p1'] = df['prob1']
-    df['p2'] = df['prob2']
 
-    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit&scan_scanned-final.csv'), header=0) #, index_col=0
+    # make colum settings compatible for bauer model fitting
+    df['choice'] = df['chose_risky'] #df['choice'] == 2.0
+    df['p1'] = 1 #df['prob1']
+    df['p2'] = 0.55 #df['prob2']
+    df['n1'] = df['n_safe']
+    df['n2'] = df['n_risky']
+
+    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
     df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
     #df_participants=df_participants.loc[1:42,:]
 
     df = df.join(df_participants['group'], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
     df = df.dropna() # automatially removes subs without group assignment
-
+    n_subs = len(df.index.unique('subject').sort_values())
+    print(f'number of subjects in dataframe: {n_subs}')
+    print(df.index.unique('subject').sort_values())
+    
     return df
 
 def invprobit(x):
     return ss.norm.ppf(x)
 
-def extract_rnp_precision(trace, model, data, format=False):
+def extract_rnp_precision_old(trace, model, data, format=False):
 
     data = data.reset_index()
 
@@ -106,6 +129,37 @@ def extract_rnp_precision(trace, model, data, format=False):
                                                 ).to_frame().reset_index(drop=True)
 
     pred = model.predict(trace, 'mean', fake_data, inplace=False)['posterior']['chose_risky_mean']
+
+    pred = pred.to_dataframe().unstack([0, 1])
+    pred = pred.set_index(pd.MultiIndex.from_frame(fake_data))
+
+    # return pred
+
+    pred0 = pred.xs(0, 0, 'x')
+    intercept = pd.DataFrame(invprobit(pred0), index=pred0.index, columns=pred0.columns)
+    gamma = invprobit(pred.xs(1, 0, 'x')) - intercept
+
+    return intercept, gamma
+
+def extract_rnp_precision(trace, model, data, format=True, group_level = False):
+
+    data = data.reset_index()
+
+    reg_list = [data.reset_index()['subject'].unique(),[0, 1], data['n1'].unique(), data['group'].unique()]
+    names=['subject', 'x', 'n_safe','group']
+
+    if format:
+        reg_list.append(data['format'].unique())
+        names.append('format')
+
+    if group_level: # needed 
+        include_group_specific = None
+    else:     # when no subjects! include_group_specific=False
+        include_group_specific = True 
+
+    fake_data = pd.MultiIndex.from_product(reg_list,names=names).to_frame().reset_index(drop=True)
+
+    pred = model.predict(trace, 'mean', fake_data, inplace=False, include_group_specific=include_group_specific)['posterior']['chose_risky_mean']
 
     pred = pred.to_dataframe().unstack([0, 1])
     pred = pred.set_index(pd.MultiIndex.from_frame(fake_data))

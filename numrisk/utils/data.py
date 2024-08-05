@@ -11,6 +11,66 @@ from nilearn import image
 from nilearn.maskers import NiftiMasker
 from collections.abc import Iterable
 
+def cleanup_behavior(df_):
+    df = df_[[]].copy()
+    df['rt'] = df_.loc[:, ('onset', 'choice')] - df_.loc[:, ('onset', 'stimulus 2')]
+    df['n1'], df['n2'] = df_['n1']['stimulus 1'], df_['n2']['stimulus 1']
+
+    df['choice'] = df_[('choice', 'choice')]
+    df['chose_n2'] =  (df['choice'] == 2.0)
+
+    #df.loc[df.choice.isnull(), 'chose_risky'] = np.nan
+
+    df['frac'] = df['n2'] / df['n1']
+    df['log(n2/n1)'] = np.log(df['frac'])
+
+    df['log(n1)'] = np.log(df['n1'])
+    df = df.droplevel(-1,1)
+    
+    return df
+
+def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumrisk'):
+    df_all = []
+    session = 1
+    runs = range(1, 7)
+
+    #if subject_list is None:
+    subject_list = [f[4:] for f in os.listdir(bids_folder) if f[0:3] == 'sub' and len(f) == 6]
+    print(f'number of subjects found: {len(np.sort(subject_list))}')
+
+    for subject in subject_list:    
+        df_sub = []
+        for run in runs:
+            fn = op.join(bids_folder, f'sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-magjudge_run-{run}_events.tsv')
+            if op.exists(fn):
+                d = pd.read_csv(fn, sep='\t',
+                            index_col=['trial_nr', 'trial_type'])
+                d['subject'], d['run'] = int(subject), run 
+                #d = d.drop([0])
+                df_sub.append(d)
+        
+        #df_sub = pd.concat([df_sub, d])
+        df_sub = pd.concat(df_sub)
+        df_sub = df_sub.reset_index().set_index(['subject','run','trial_type', 'trial_nr']) 
+        df_sub = df_sub.unstack('trial_type')
+        df_sub = cleanup_behavior(df_sub)
+        df_all.append(df_sub)
+
+    df_all = pd.concat(df_all) 
+    return df_all
+
+def get_data_majduge(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
+    df = get_behavior(subject_list, bids_folder=bids_folder)
+
+    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
+    df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
+
+    df = df.join(df_participants['group'], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
+    df = df.dropna() # automatially removes subs without group assignment
+
+    df['choice'] = df['chose_n2']
+    return df
+
 def get_subjects(bids_folder='/data/ds-dnumr', correct_behavior=True, correct_npc=False):
     subjects = list(range(1, 200))
 

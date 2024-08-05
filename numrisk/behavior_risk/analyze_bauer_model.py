@@ -12,11 +12,11 @@ from bauer.utils.bayes import softplus
 import pandas as pd
 
 from utils import get_data
-from utils_02 import build_model #, plot_ppc
+from utils_02 import build_model, get_rnp
 
 def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic',col_wrap=5, only_ppc=False, # AUC=False,E_dif=False, 
 plot_traces=False):
-
+    sns.set_context('talk')
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
@@ -25,9 +25,9 @@ plot_traces=False):
     model = build_model(model_label, df)
     model.build_estimation_model()
 
-    idata = az.from_netcdf(op.join(bids_folder, f'derivatives/cogmodels/model-{model_label}_format-{format}_trace.netcdf'))
+    idata = az.from_netcdf(op.join(bids_folder, f'derivatives/cogmodels_risk/model-{model_label}_format-{format}_trace.netcdf'))
 
-    target_folder = op.join(bids_folder, f'derivatives/cogmodels/figures/{model_label}_format-{format}')
+    target_folder = op.join(bids_folder, f'derivatives/cogmodels_risk/figures/{model_label}_format-{format}')
     if not op.exists(target_folder):
         os.makedirs(target_folder)
 
@@ -35,15 +35,20 @@ plot_traces=False):
         az.plot_trace(idata, var_names=['~p'])
         plt.savefig(op.join(target_folder, 'traces.pdf'))
 
+    if model.prior_estimate == 'klw':
+        idata.posterior['rnp'] = get_rnp(idata.posterior['evidence_sd'], idata.posterior['prior_sd'])
+        idata.posterior['rnp_mu'] = get_rnp(idata.posterior['evidence_sd_mu'], idata.posterior['prior_sd_mu'])
+        model.free_parameters['rnp'] = '' # appending to a dictionary
 
     for par in model.free_parameters:
         traces = idata.posterior[par+'_mu'].to_dataframe()
 
+        par_helper = par if par != 'rnp' else 'evidence_sd'
 
-        for regressor, t in traces.groupby(par+'_regressors'):
+        for regressor, t in traces.groupby(par_helper+'_regressors'):
             t = t.copy()
             print(regressor, t)
-            if (par in ['prior_std', 'evidence_sd']) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
+            if ('sd' in par) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
                 t = softplus(t)
 
             plt.figure()
@@ -56,18 +61,23 @@ plot_traces=False):
             else:
                 if par == 'risky_prior_mu':
                     plt.axvline(np.log(df['n_risky']).mean(), c='k', ls='--')
-                elif par == 'risky_prior_std':
+                elif par == 'risky_prior_sd':
                     plt.axvline(np.log(df['n_risky']).std(), c='k', ls='--')
                 elif par == 'safe_prior_mu':
                     for n_safe in np.log([7., 10., 14., 20., 28.]):
                         plt.axvline(n_safe, c='k', ls='--')
 
                     plt.axvline(np.log(df['n_safe']).mean(), c='k', ls='--', lw=2)
-                elif par == 'safe_prior_std':
+                elif par == 'safe_prior_sd':
                     plt.axvline(np.log(df['n_safe']).std(), c='k', ls='--')
-
-            plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'))
+            
+            sns.despine()
+            plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'), bbox_inches='tight')
             plt.close()
+
+
+
+
 
 
 
