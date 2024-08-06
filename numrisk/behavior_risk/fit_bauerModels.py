@@ -22,7 +22,7 @@ def main(model_label, burnin=2000, samples=2000, bids_folder = '/Users/mrenke/da
     df = df.xs(format,0, level='format')
 
     # different evidences for safe (n1) & risky (n2) options: everything already coded so that n1 always safe and n2 always risky & choice = chose_risky
-    if any(char in model_label for char in ['6', '7'])  : # unnecessary 
+    if any(char in model_label for char in ['6', '7','9'])  : # unnecessary 
         print('different evidences for safe (n1) & risky (n2) options!')
 
     target_accept = 0.9

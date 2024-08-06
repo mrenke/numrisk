@@ -77,16 +77,30 @@ def build_model(model_label, df):
                                     prior_estimate = 'objective',
                                     fit_seperate_evidence_sd = True,
                                     )
-    elif model_label == '8': # ifferent evidences for safe (n1) & risky (n2) options & 2 prior mus but fix prior sd
+    elif model_label == '8': # different evidences for safe (n1) & risky (n2) options & 2 prior mus but fix prior sd
         model = RiskRegressionModel(df, 
                                     regressors = {},
                                     prior_estimate = 'fix_prior_sd',
                                     fit_seperate_evidence_sd = True,
                                     )
-    elif model_label == '8reg': # ifferent evidences for safe (n1) & risky (n2) options & 2 prior mus but fix prior sd
+    elif model_label == '8reg': # different evidences for safe (n1) & risky (n2) options & 2 prior mus but fix prior sd
         model = RiskRegressionModel(df, 
                                     regressors = {'n1_evidence_sd':'group', 'n2_evidence_sd':'group','risky_prior_mu':'group','safe_prior_mu':'group'},
                                     prior_estimate = 'fix_prior_sd',
+                                    fit_seperate_evidence_sd = True,
+                                    )
+    elif model_label == '9': # FlexNoise for safe (n1) & risky (n2) & & 2 prior mus but fix prior sd
+        model = FlexibleNoiseRiskRegressionModel(df, 
+                                    regressors = {}, # 
+                                    prior_estimate = 'fix_prior_sd',
+                                    polynomial_order=5, 
+                                    fit_seperate_evidence_sd = True,
+                                    )
+    elif model_label == '9reg': # FlexNoise for safe (n1) & risky (n2) & & 2 prior mus but fix prior sd
+        model = FlexibleNoiseRiskRegressionModel(df, 
+                                    regressors = {'n1_evidence_sd':'group', 'n2_evidence_sd':'group','risky_prior_mu':'group','safe_prior_mu':'group'}, # 
+                                    prior_estimate = 'fix_prior_sd',
+                                    polynomial_order=5, 
                                     fit_seperate_evidence_sd = True,
                                     )
     else :
