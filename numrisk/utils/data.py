@@ -362,7 +362,8 @@ class Subject(object):
             hemi=None,
             roi=None,
             space='fsnative',
-            split_data = ''):
+            split_data = '',
+            keys = ['mu', 'sd', 'amplitude', 'baseline']):
 
         dir = f'encoding_model{split_data}'
         if cross_validated:
@@ -388,7 +389,6 @@ class Subject(object):
 
         parameters = []
 
-        keys = ['mu', 'sd', 'amplitude', 'baseline']
 
         mask = self.get_volume_mask(session=session, roi=roi, epi_space=True)
         masker = NiftiMasker(mask)
@@ -405,6 +405,8 @@ class Subject(object):
             parameters.append(pars)
 
         return pd.concat(parameters, axis=1, keys=keys, names=['parameter'])
+
+
 
     def get_fmri_events(self, session, runs=None):
 
@@ -442,3 +444,18 @@ class Subject(object):
             os.makedirs(target_dir)
 
         return target_dir
+    
+    def get_surf_info_fs(self):
+        info = {'L':{}, 'R':{}}
+
+        for hemi in ['L', 'R']:
+
+            fs_hemi = {'L':'lh', 'R':'rh'}[hemi]
+
+            info[hemi]['inner'] = op.join(self.bids_folder, 'derivatives', 'freesurfer', f'sub-{self.subject}', 'surf',f'{fs_hemi}.white')
+            info[hemi]['outer'] = op.join(self.bids_folder, 'derivatives', 'freesurfer', f'sub-{self.subject}', 'surf', f'{fs_hemi}.pial')
+        
+            for key in info[hemi]:
+                assert(os.path.exists(info[hemi][key])), f'{info[hemi][key]} does not exist'
+
+        return info
