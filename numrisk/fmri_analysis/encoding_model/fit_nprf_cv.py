@@ -66,6 +66,9 @@ def main(subject,  bids_folder='/data/ds-dnumrisk', retroicor=False, smoothed=Fa
 
     mask = op.join(bids_folder, 'derivatives',
                    f'fmriprep/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-magjudge_run-1_space-T1w_desc-brain_mask.nii.gz')
+    if ~op.exists(mask): # for some subs brain mask creation for some runs did not work apparently, so lets just take another run (they should be pretty similar?)
+        mask = op.join(bids_folder, 'derivatives',
+                f'fmriprep/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-magjudge_run-2_space-T1w_desc-brain_mask.nii.gz')
 
     masker = NiftiMasker(mask_img=mask)
 

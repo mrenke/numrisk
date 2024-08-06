@@ -45,7 +45,7 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-s
     df['format'] = format
     df = df.set_index('format', append=True)
 
-    for plot_type in [1,2]: #,3, 5, 6, 7, 8, 9, no "order" (risky_first) in this risk data
+    for plot_type in [1,2,3]: #,3, 5, 6, 7, 8, 9, no "order" (risky_first) in this risk data
        
         for var_name in ['ll_bernoulli']: # 'p', 
             for level in ['subject','group']:

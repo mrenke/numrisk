@@ -94,7 +94,7 @@ def get_data(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
     df['n1'] = df['n_safe']
     df['n2'] = df['n_risky']
 
-    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit&scan_scanned-final.csv'), header=0) #, index_col=0
+    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
     df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
     #df_participants=df_participants.loc[1:42,:]
 
