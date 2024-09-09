@@ -103,6 +103,13 @@ def build_model(model_label, df):
                                     polynomial_order=5, 
                                     fit_seperate_evidence_sd = True,
                                     )
+    elif model_label == '10': # skeleton
+        model = FlexibleNoiseRiskRegressionModel(df, 
+                                    regressors = {'evidence_sd':'group'}, # 
+                                    prior_estimate = 'shared',
+                                    polynomial_order=5, 
+                                    fit_seperate_evidence_sd = False,
+                                    )
     else :
         raise ValueError(f'Unknown model label: {model_label}')
     
