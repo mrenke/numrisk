@@ -71,3 +71,4 @@ experiment_SMILE/settings/*
 # simulation data
 behavior_simulations/data_saved/*
 .DS_Store
+.DS_Store

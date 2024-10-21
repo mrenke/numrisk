@@ -435,6 +435,36 @@ class Subject(object):
         events = pd.concat((stimulus1, stimulus2)).sort_index()
 
         return events
+    
+    def get_fmri_events_stim2(self, session, runs=None):
+
+        if runs is None:
+            runs = range(1,7)
+
+        behavior = []
+        for run in runs:
+            behavior.append(pd.read_table(op.join(
+                self.bids_folder, f'sub-{self.subject}/ses-{session}/func/sub-{self.subject}_ses-{session}_task-magjudge_run-{run}_events.tsv')))
+
+        behavior = pd.concat(behavior, keys=runs, names=['run'])
+        behavior = behavior.reset_index().set_index(
+            ['run', 'trial_type'])
+
+        behavior = behavior[behavior['trial_nr'] != 0]
+
+        stimulus1 = behavior.xs('stimulus 1', 0, 'trial_type', drop_level=False).reset_index('trial_type')[['onset', 'trial_nr', 'trial_type', 'n1']]
+        stimulus1['duration'] = 0.6
+        stimulus1['trial_type'] = stimulus1.n1.map(lambda n1: f'n1_{int(n1)}')
+
+
+        stimulus2 = behavior.xs('stimulus 2', 0, 'trial_type', drop_level=False).reset_index('trial_type')[['onset', 'trial_nr', 'trial_type', 'n2']]
+        stimulus2['duration'] = 0.6
+        stimulus2['trial_type'] = stimulus2.trial_nr.map(lambda trial: f'trial_{trial:03d}_n2')
+
+        events = pd.concat((stimulus1, stimulus2)).sort_index()
+        events = events[['onset', 'duration', 'trial_type']]  
+        
+        return events 
 
     def get_target_dir(subject, session, sourcedata, base, modality='func'):
         target_dir = op.join(sourcedata, 'derivatives', base, f'sub-{subject}', f'ses-{session}',
