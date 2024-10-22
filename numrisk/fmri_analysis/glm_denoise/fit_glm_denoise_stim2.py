@@ -16,6 +16,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
     session = 1
     derivatives = op.join(bids_folder, 'derivatives')
     sub = Subject(subject, bids_folder=bids_folder)
+    subject = f'{int(subject):02d}'
 
     n_stim = 2
     base_dir = f'glm_stim{n_stim}.denoise'
@@ -32,7 +33,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
  
     data = [image.load_img(im).get_fdata() for im in ims]
 
-    base_dir = op.join(derivatives, base_dir, f'sub-{subject:02d}',
+    base_dir = op.join(derivatives, base_dir, f'sub-{subject}',
                        f'ses-{session}', 'func')
 
     if not op.exists(base_dir):
@@ -92,7 +93,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
     betas = results_glmsingle['typed']['betasmd']
     betas = image.new_img_like(ims[0], betas)
     betas = image.index_img(betas, slice(None, None, 2))
-    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe.nii.gz'))
+    betas.to_filename(op.join(base_dir, f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims{n_stim}_pe.nii.gz'))
 
 
 if __name__ == '__main__':
