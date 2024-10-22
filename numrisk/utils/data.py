@@ -292,14 +292,15 @@ class Subject(object):
 
         return confounds
 
-    def get_single_trial_volume(self, session, roi=None, 
+    def get_single_trial_volume(self, session, n_stim=1,
+            roi=None, 
             denoise=False,
             smoothed=False,
             pca_confounds=False,
             retroicor=False,
             split_data = ''):
 
-        key= f'glm_stim1{split_data}'
+        key= f'glm_stim{n_stim}{split_data}'
 
         if denoise:
             key += '.denoise'
@@ -317,7 +318,7 @@ class Subject(object):
             key += '.smoothed'
 
         fn = op.join(self.bids_folder, 'derivatives', key, f'sub-{self.subject}', f'ses-{session}', 'func', 
-                f'sub-{self.subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe.nii.gz')
+                f'sub-{self.subject}_ses-{session}_task-magjudge_space-T1w_desc-stims{n_stim}_pe.nii.gz')
 
         im = image.load_img(fn)
         
