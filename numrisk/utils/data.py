@@ -434,6 +434,7 @@ class Subject(object):
         stimulus2['trial_type'] = stimulus2.n2.map(lambda n2: f'n2_{int(n2)}')
 
         events = pd.concat((stimulus1, stimulus2)).sort_index()
+        events = events[['onset', 'duration', 'trial_type']].dropna()
 
         return events
     

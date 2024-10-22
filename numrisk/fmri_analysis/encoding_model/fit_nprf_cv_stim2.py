@@ -45,7 +45,7 @@ def main(subject,  bids_folder='/data/ds-dnumrisk', retroicor=False, smoothed=Fa
     paradigm = paradigm[paradigm.trial_type == f'stimulus {n_stim}'].set_index('trial_nr', append=True)
 
     paradigm[f'log(n{n_stim})'] = np.log(paradigm[f'n{n_stim}'])
-    paradigm = paradigm[f'log(n{n_stim})']
+    paradigm = paradigm[f'log(n{n_stim})'].dropna()
 
     print(paradigm)
 
@@ -58,14 +58,14 @@ def main(subject,  bids_folder='/data/ds-dnumrisk', retroicor=False, smoothed=Fa
 
     mask = op.join(bids_folder, 'derivatives',
                    f'fmriprep/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-magjudge_run-1_space-T1w_desc-brain_mask.nii.gz')
-    if ~ op.exists(mask): # for some subs brain mask creation for some runs did not work apparently, so lets just take another run (they should be pretty similar?)
+    if not op.exists(mask): # for some subs brain mask creation for some runs did not work apparently, so lets just take another run (they should be pretty similar?)
         mask = op.join(bids_folder, 'derivatives',
                 f'fmriprep/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-magjudge_run-2_space-T1w_desc-brain_mask.nii.gz')
 
     masker = NiftiMasker(mask_img=mask)
 
     data = op.join(bids_folder, 'derivatives', key,
-                   f'sub-{subject}', f'ses-{session}', 'func', f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims1_pe.nii.gz')
+                   f'sub-{subject}', f'ses-{session}', 'func', f'sub-{subject}_ses-{session}_task-magjudge_space-T1w_desc-stims{n_stim}_pe.nii.gz')
 
     data = pd.DataFrame(masker.fit_transform(data), index=paradigm.index)
     print(data)

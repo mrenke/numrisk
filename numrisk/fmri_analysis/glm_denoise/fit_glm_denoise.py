@@ -18,7 +18,7 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
 
 
     sub = Subject(subject, bids_folder=bids_folder)
-
+    subject = f'{int(subject):02d}'
 
     if split_data == None:
         base_dir = 'glm_stim1.denoise'

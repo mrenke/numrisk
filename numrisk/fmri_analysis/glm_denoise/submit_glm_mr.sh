@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=fit_st_denoise
-#SBATCH --output=/home/mrenke/logs/fit_st_denoise_%A-%a.txt
+#SBATCH --output=/home/mrenke/logs/fit_st_denoise_stim2_%A-%a.txt
 #SBATCH --ntasks=1
 #SBATCH -c 16
+#SBATCH --mem=16G 
 #SBATCH --time=2:00:00
 
 . $HOME/.bashrc

@@ -19,4 +19,4 @@ export PARTICIPANT_LABEL=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
 
 source activate tf2-gpu
 
-python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_select_voxels_cv.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise 
+python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_select_voxels_cv_stim2.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mask NPC_R  --denoise 

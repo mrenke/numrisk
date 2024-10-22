@@ -83,12 +83,14 @@ def main(subject,  bids_folder, smoothed=False,  retroicor=False, split_data = N
     # and then running the procedure using the .fit() routine
     glmsingle_obj = GLM_single(opt)
 
+    tmp_figuredir = op.join(base_dir, 'GLMestimatesingletrialfigures') # would be written to cwd otherwise and could crash when multiple nodes use it a the same time 
     results_glmsingle = glmsingle_obj.fit(
         X,
         data,
         0.6,
         2.3,
-        outputdir=base_dir)
+        outputdir=base_dir,
+        figuredir = tmp_figuredir)
 
     betas = results_glmsingle['typed']['betasmd']
     betas = image.new_img_like(ims[0], betas)
