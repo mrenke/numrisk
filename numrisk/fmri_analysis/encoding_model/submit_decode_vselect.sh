@@ -4,7 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=96G
 #SBATCH --gres gpu:1
-#SBATCH --time=3:00:00
+#SBATCH --exclude=u20-chaiam0-613,u20-chaiam0-614,u20-chaiam0-613,u20-chaiam0-614
+#SBATCH --time=5:00:00
 
 source /etc/profile.d/lmod.sh
 module load gpu cuda

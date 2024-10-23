@@ -72,3 +72,6 @@ experiment_SMILE/settings/*
 behavior_simulations/data_saved/*
 .DS_Store
 .DS_Store
+
+#sciencecluster2
+numrisk/fmri_analysis/encoding_model/core

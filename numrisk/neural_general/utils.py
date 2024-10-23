@@ -5,15 +5,15 @@ import numpy as np
 #from tqdm.contrib.itertools import product
 import matplotlib.pyplot as plt
 #import pingouin
-import seaborn as sns
+#import seaborn as sns
 
 # E['sd'] = np.trapz(np.abs(E.values - pdf.columns.astype(float).values[np.newaxis, :]) * pdf, pdf.columns, axis=1)
 
-def get_decoding_info(subject, session=1,  bids_folder='/data/ds-dnumrisk',key = 'decoded_pdfs.volume', mask='NPC_R', n_voxels='select'): # 
+def get_decoding_info(subject, session=1,n_stim=1,  bids_folder='/data/ds-dnumrisk',key = 'decoded_pdfs.volume', mask='NPC_R', n_voxels='select'): # 
 
     subject = f'{subject:02d}'
     
-    key = 'decoded_pdfs.volume.cv_vselect.denoise'
+    key = f'decoded_pdfs_stim{n_stim}.volume.cv_vselect.denoise'
     fn = f'sub-{subject}_ses-{session}_mask-{mask}_space-T1w_pars.tsv'
 
     pdf = op.join(bids_folder, 'derivatives', key, f'sub-{subject}', 'func', fn)

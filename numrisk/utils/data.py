@@ -59,10 +59,10 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
     df_all = pd.concat(df_all) 
     return df_all
 
-def get_data_majduge(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
+def get_data_magjduge(bids_folder='/Users/mrenke/data/ds-dnumrisk', subject_list=None):
     df = get_behavior(subject_list, bids_folder=bids_folder)
 
-    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
+    df_participants = pd.read_csv(op.join(bids_folder,'add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
     df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
 
     df = df.join(df_participants['group'], on='subject',how='left') # takes only the subs fro df_paricipants that are in the df
