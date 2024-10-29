@@ -85,6 +85,8 @@ def cleanTS(sub, ses, remove_task_effects = False, runs = range(1, 7),space = 'f
     # get number of vertices
     if space == 'fsaverage5':
         number_of_vertex = 20484  # 'fsaverage5', 10242 * 2
+    elif space == 'fsaverage':
+        number_of_vertex = 327684  # 'fsaverage', 163842 * 2
     elif space == 'fsnative': # takes way to long to estimate CC
         timeseries = [None] * 2
         for i, hemi in enumerate(['L', 'R']): # have to load in both hemispheres to get the number of vertices (can be different for L&R)
@@ -106,7 +108,8 @@ def cleanTS(sub, ses, remove_task_effects = False, runs = range(1, 7),space = 'f
 
         fmriprep_confounds_file = op.join(bids_folder,'derivatives', 'fmriprep', f'sub-{sub}', f'ses-{ses}', 'func', f'sub-{sub}_ses-{ses}_task-{task}_run-{run}_desc-confounds_timeseries.tsv')
         fmriprep_confounds = pd.read_table(fmriprep_confounds_file)[fmriprep_confounds_include] 
-        fmriprep_confounds= fmriprep_confounds.fillna(method='bfill')
+        #fmriprep_confounds= fmriprep_confounds.fillna(method='bfill') # deprecated
+        fmriprep_confounds= fmriprep_confounds.bfill()
 
         if remove_task_effects:
             dm = get_events_confounds(sub, ses, run, bids_folder)
@@ -182,7 +185,16 @@ def get_basic_mask():
     mask = ~np.isin(labeling, masked_labels)
     return mask, labeling_noParcel
 
-def plot_GM12_from_sum_npfile(file = 'gm_av50_unfiltered_aligned-marg.npy',bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk',grad_folder = 'derivatives/gradients', colorbar=False):
+def get_glasser_parcels(base_folder='/mnt_03/diverse_neuralData/atlases_parcellations'):
+    atlas_left = nib.load(op.join(base_folder,'lh.HCPMMP1.gii')).agg_data()
+    atlas_right =  nib.load(op.join(base_folder,'rh.HCPMMP1.gii')).agg_data()
+
+    labeling = np.concatenate([(atlas_left+1000), (atlas_right+2000)]) # unique labels for left and right!
+    mask = ~np.isin(labeling, 0) # non-cortex region (unknow and medial wall) have label 0
+    return mask, labeling
+
+
+def plot_GM12_from_sum_npfile_old(file = 'gm_av50_unfiltered_aligned-marg.npy',bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk',grad_folder = 'derivatives/gradients', colorbar=False):
 
     fsaverage = fetch_surf_fsaverage()
 
@@ -205,3 +217,19 @@ def plot_GM12_from_sum_npfile(file = 'gm_av50_unfiltered_aligned-marg.npy',bids_
     nplt.plot_surf_stat_map(surf_mesh=fsaverage.infl_right, colorbar = colorbar,stat_map=grad3_r,cmap='viridis',view='medial',axes=axes[2])
     axes[2].set(title='grad 3')
     figure.suptitle(file)
+
+def plot_GM12_from_sum_npfile(n_comp, file = '',bids_folder='',grad_folder = 'derivatives/gradients', 
+                              cmap='viridis',colorbar=False,):
+
+    fsaverage = fetch_surf_fsaverage()
+
+    grad = np.load(op.join(bids_folder,grad_folder,file))
+    
+    figure, axes = plt.subplots(nrows=1, ncols=n_comp, subplot_kw=dict(projection='3d'))
+
+    for i in range(0,n_comp):
+        gm = np.split(grad[i],2) # for i, hemi in enumerate(['L', 'R']): --> left first
+        gm_r = gm[1] # 0 = left, 1 = right
+
+        nplt.plot_surf_stat_map(surf_mesh=fsaverage.infl_right, colorbar = colorbar,stat_map=gm_r,cmap=cmap,view='medial',axes=axes[i])
+        axes[i].set(title=f'grad {i+1}')
