@@ -22,7 +22,7 @@ def main(subject,bids_folder): #specification,
     # CM
     correlation_measure = ConnectivityMeasure(kind='correlation')
     cm = correlation_measure.fit_transform([seed_ts.T])[0]
-    np.save(op.join(target_folder_cm,f'sub-{sub}_ses-{ses}_glasserParcel-{space}.npy'),cm) # 
+    np.save(op.join(target_folder_cm,f'sub-{sub}_glasserParcel-{space}.npy'),cm) # 
     print(f'sub-{sub}: connectivity matrix estimated')
 
 if __name__ == '__main__':
