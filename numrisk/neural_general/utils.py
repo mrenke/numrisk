@@ -37,3 +37,13 @@ def get_decoding_info(subject, session=1,n_stim=1,  bids_folder='/data/ds-dnumri
     else:
         print(pdf)
         return pd.DataFrame(np.zeros((0, 0)))
+
+from neuromaps import transforms
+import nibabel as nib
+
+def fsavTofsLR(source_folder, fn, hemi, source_space='fsaverage5', target_space='fsLR_den-32k'):
+        source_fn =  op.join(source_folder, fn)
+        target_fn = op.join(source_folder, fn.replace(source_space,target_space))
+        target = transforms.fsaverage_to_fslr(source_fn, '32k',hemi=hemi)
+        nib.save(target[0],target_fn) # 
+        print(f'saved to {target_fn}')
