@@ -10,7 +10,9 @@ from braincoder.utils.stats import get_rsq
 import os
 from nilearn.input_data import NiftiMasker
 
-def main(subject_id, bids_folder, smoothed=False, mixture_model=False, same_rfs=False): # nordic=True,
+def main(subject_id, bids_folder, smoothed=False, mixture_model=False, same_rfs=False,
+         task='magjudge'): # nordic=True,
+    
     session = 1
     key = 'encoding_model.2d'
     n_stim = 2 # we take activity from the second stimulus
@@ -98,20 +100,19 @@ def main(subject_id, bids_folder, smoothed=False, mixture_model=False, same_rfs=
 
     pred_grid = model.predict(parameters=grid_pars, paradigm=paradigm)
     r2_grid = get_rsq(data, pred_grid)
-    masker.inverse_transform(r2_grid).to_filename(op.join(target_dir, f'sub-{subject_id}_task-task_desc-grid.r2_space-T1w_pars.nii.gz'))
+    masker.inverse_transform(r2_grid).to_filename(op.join(target_dir, f'sub-{subject}_task-task_desc-grid.r2_space-T1w_pars.nii.gz'))
     for column in grid_pars.columns:
-        masker.inverse_transform(grid_pars[column]).to_filename(op.join(target_dir, f'sub-{subject_id}_task-task_desc-grid.{column}_space-T1w_pars.nii.gz'))
-    
+        masker.inverse_transform(grid_pars[column]).to_filename(op.join(target_dir, f'sub-{subject}_task-task_desc-grid.{column}_space-T1w_pars.nii.gz'))
     
     pars_gd = fitter.fit(init_pars=grid_pars, learning_rate=.003, store_intermediate_parameters=False, max_n_iterations=10000,
             r2_atol=0.00001)
 
     pred_gd = model.predict(parameters=pars_gd, paradigm=paradigm)
     r2_gd = get_rsq(data, pred_gd)
-    masker.inverse_transform(r2_gd).to_filename(op.join(bids_folder, 'derivatives', key, f'sub-{subject_id}', 'func', f'sub-{subject_id}_task-task_desc-gd.r2_space-T1w_pars.nii.gz'))
+    masker.inverse_transform(r2_gd).to_filename(op.join(target_dir, f'sub-{subject}_task-{task}_desc-gd.r2_space-T1w_pars.nii.gz'))
 
     for column in pars_gd.columns:
-        masker.inverse_transform(pars_gd[column]).to_filename(op.join(target_dir, f'sub-{subject_id}_task-task_desc-gd.{column}_space-T1w_pars.nii.gz'))
+        masker.inverse_transform(pars_gd[column]).to_filename(op.join(target_dir, f'sub-{subject}_task-{task}_desc-gd.{column}_space-T1w_pars.nii.gz'))
 
     
 if __name__ == "__main__":
