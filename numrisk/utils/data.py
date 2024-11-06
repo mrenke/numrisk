@@ -91,6 +91,7 @@ class Subject(object):
 
         self.subject = '%02d' % int(subject)
         self.bids_folder = bids_folder
+        self.subject_id = '%02d' % int(subject)
 
 
     def get_volume_mask(self, roi='NPC12r'):
@@ -491,3 +492,105 @@ class Subject(object):
                 assert(os.path.exists(info[hemi][key])), f'{info[hemi][key]} does not exist'
 
         return info
+    
+
+    def get_brain_mask(self, epi_space=True, task = 'magjudge'):
+        target_folder = op.join(self.bids_folder, 'derivatives', 'fmriprep', f'sub-{self.subject_id}')
+                
+        if epi_space:
+            mask = op.join(target_folder, 'ses-1', 'func', f'sub-{self.subject_id}_ses-1_task-{task}_run-1_space-T1w_desc-brain_mask.nii.gz')
+            if not op.exists(mask):
+                mask = op.join(target_folder, 'ses-1', 'func', f'sub-{self.subject_id}_ses-1_task-{task}_run-2_space-T1w_desc-brain_mask.nii.gz')
+                print(f'brain mask for run 1 does not exist, using run 2 instead')
+        else:
+            mask = op.join(target_folder, 'ses-1', 'anat', f'sub-{self.subject_id}_ses-1_desc-brain_mask.nii.gz')
+
+    def get_brain_masker(self, epi_space=True, smoothing_fwhm=None):
+        return NiftiMasker(mask_img=self.get_brain_mask(epi_space), smoothing_fwhm=smoothing_fwhm)
+
+
+    def get_cv_prf_parameters_volume(self,session, holdout_run, smoothed=False, # holdout_session, 
+                                    n=None, task='magjudge',
+                                    return_image=False, two_dimensional=False, nordic=False,
+                                    mixture_model=False,
+                                    same_rfs=False,
+                                    roi=None):
+
+        #if not nordic:
+        #    raise NotImplementedError('Only NORDIC supported')
+
+        if (not mixture_model) and same_rfs:
+            raise ValueError('Cannot have same_rfs=True without mixture_model=True')
+
+        if not two_dimensional and n is None:
+            raise ValueError('`n` should be given for 1D models')
+        elif not two_dimensional:
+            assert n in [1, 2], 'n should be 1 or 2'
+
+        if two_dimensional:
+            dir = 'encoding_model.2d.cv'
+        else:
+            dir = 'encoding_model.cv'
+
+        if mixture_model:
+            dir += '.mixture'
+        
+        if same_rfs:
+            dir += '.same_rfs'
+
+        if smoothed:
+            dir += '.smoothed'
+
+        parameters = []
+                
+        if two_dimensional:
+            if mixture_model:
+                if same_rfs:
+                    labels = ['r2', 'cvr2', 'mu', 'sd', 'weight', 'amplitude', 'baseline']
+                else:
+                    labels = ['r2', 'cvr2', 'mu_x', 'mu_y', 'sd_x', 'sd_y', 'weight', 'amplitude', 'baseline']
+            else:
+                labels = ['r2', 'cvr2', 'mu_x', 'mu_y', 'sd_x', 'sd_y', 'rho', 'amplitude', 'baseline']
+
+            keys = [f'sub-{self.subject_id}_ses-{session}_task-{task}_run-{holdout_run}_desc-gd.{label}_space-T1w_pars.nii.gz' for label in labels]
+
+        else:
+            n_label = f'n{n}'
+            labels = [f'{n_label}.mode', f'{n_label}.fwhm', f'{n_label}.amplitude', f'{n_label}.baseline', f'{n_label}.r2', f'{n_label}.cvr2']
+            keys = [f'sub-{self.subject_id}_ses-{session}_task-{task}_run-{holdout_run}_desc-gd.{label}_space-T1w_pars.nii.gz' for label in labels]
+
+        #masker = self.get_brain_masker()
+        mask = self.get_volume_mask(roi=roi)
+        masker = NiftiMasker(mask_img=mask, standardize=False)
+
+        for label, key in zip(labels, keys):
+
+            fn = op.join(self.bids_folder, 'derivatives', dir, f'sub-{self.subject_id}', 'func', key)
+
+            if op.exists(fn):
+                pars = pd.Series(masker.fit_transform(fn).ravel(), name=label)
+                parameters.append(pars)
+
+            else:
+                print(f'{fn} does not exist')
+
+                if return_image:
+                    raise Exception(f'{fn} does not exist')
+                    
+        parameters =  pd.concat(parameters, axis=1, names=['parameter'])
+        
+        if return_image:
+            return masker.inverse_transform(parameters.T)
+
+        if mixture_model & same_rfs:
+            parameters['mu_natural'] = np.exp(parameters['mu'])
+            parameters['mu_within_range'] = (parameters['mu'] > np.log(5)) & (parameters['mu'] < np.log(25))
+        elif two_dimensional:
+            parameters['mu_x_natural'] = np.exp(parameters['mu_x'])
+            parameters['mu_y_natural'] = np.exp(parameters['mu_y'])
+            parameters['mu_within_range'] = (parameters['mu_x'] > np.log(5)) & (parameters['mu_x'] < np.log(25)) & (parameters['mu_y'] > np.log(5)) & (parameters['mu_y'] < np.log(25))
+
+
+        return parameters
+
+
