@@ -67,7 +67,7 @@ def main(subject_id, bids_folder, smoothed=False, mixture_model=False, same_rfs=
 
     cv_r2s = []
 
-    # Cross-validation loop: for each session and run, split data into train/test sets
+    # Cross-validation loop: for each run, split data into train/test sets
     for test_run in runs:
 
         test_data, test_paradigm = data.loc[test_run].copy(), paradigm.loc[test_run].copy()
@@ -111,21 +111,21 @@ def main(subject_id, bids_folder, smoothed=False, mixture_model=False, same_rfs=
         pred_train = model.predict(parameters=pars_gd, paradigm=train_paradigm)
         pred_test = model.predict(parameters=pars_gd, paradigm=test_paradigm)
 
-        r2_gd = get_rsq(train_data, pred_train)
-        cv_r2_gd = get_rsq(test_data, pred_test)
+        r2_gd = get_rsq(train_data, pred_train).astype(np.float32)
+        cv_r2_gd = get_rsq(test_data, pred_test).astype(np.float32)
 
         masker.inverse_transform(r2_gd).to_filename(op.join(target_dir, f'sub-{subject}_ses-{session}_task-{task}_run-{test_run}_desc-gd.r2_space-T1w_pars.nii.gz'))
         masker.inverse_transform(cv_r2_gd).to_filename(op.join(target_dir, f'sub-{subject}_ses-{session}_task-{task}_run-{test_run}_desc-gd.cvr2_space-T1w_pars.nii.gz'))
 
         for column in pars_gd.columns:
-            masker.inverse_transform(pars_gd[column]).to_filename(op.join(target_dir, f'sub-{subject}_ses-{session}_task-{task}_run-{test_run}_desc-gd.{column}_space-T1w_pars.nii.gz'))
+            masker.inverse_transform(pars_gd[column].astype(np.float32)).to_filename(op.join(target_dir, f'sub-{subject}_ses-{session}_task-{task}_run-{test_run}_desc-gd.{column}_space-T1w_pars.nii.gz'))
 
         # Append the cross-validated R^2 values
         cv_r2s.append(cv_r2_gd)
 
     # Combine all cross-validated R^2 results and save them
     #test_keys = [test_ix for test_ix, _ in paradigm.groupby('run')]
-    cv_r2s = pd.concat(cv_r2s, keys=runs, names=['run']).groupby(level=1, axis=0).mean()
+    cv_r2s = pd.concat(cv_r2s, keys=runs, names=['run']).groupby(level=1, axis=0).mean() # should be grouped across voxels!
     print(f'shape : ')
     print(np.shape(cv_r2s))
     try:    
