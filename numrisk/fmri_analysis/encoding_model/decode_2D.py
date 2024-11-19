@@ -52,7 +52,7 @@ def main(subject_id, smoothed, bids_folder, two_dimensional=True,
     else:
         model = GaussianPointPRF2D(correlated_response=True)
 
-    x = np.log(np.arange(5, 26, 1.))
+    x = np.log(np.arange(5, (2*28), 1.))
     y = x.copy()
     paradigm_x, paradigm_y = np.meshgrid(x, y)
 
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--two_dimensional', action='store_true')
     parser.add_argument('--mixture_model', action='store_true')
     parser.add_argument('--same_rfs', action='store_true')
-    parser.add_argument('--n_voxels', type=int)
+    parser.add_argument('--n_voxels', type=int, default=100)
     parser.add_argument('--roi', default='NPC_R')
     parser.add_argument('--bids_folder', default='~/data/ds-dnumrisk')
     args = parser.parse_args()
