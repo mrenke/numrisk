@@ -8,15 +8,15 @@ from tqdm import tqdm
 from nipype.interfaces.freesurfer import SurfaceTransform
 
 
-def transform_to_fsaverage(in_file, fs_hemi, source_subject, bids_folder):
+def transform_fsaverage(in_file, fs_hemi, source_subject, bids_folder, target_space = 'fsaverage'):
 
         subjects_dir = op.join(bids_folder, 'derivatives', 'freesurfer')
 
         sxfm = SurfaceTransform(subjects_dir=subjects_dir)
         sxfm.inputs.source_file = in_file
-        sxfm.inputs.out_file = in_file.replace('fsnative', 'fsaverage')
+        sxfm.inputs.out_file = in_file.replace('fsnative', target_space)
         sxfm.inputs.source_subject = source_subject
-        sxfm.inputs.target_subject = 'fsaverage'
+        sxfm.inputs.target_subject = target_space
         sxfm.inputs.hemi = fs_hemi
 
         r = sxfm.run()
@@ -48,8 +48,9 @@ def main(subject, session, bids_folder, param,cv=False, smoothed=False): # param
             print(f'saving as {target_fn}')
 
             nb.save(im, target_fn) # save in native surface space
+            transform_fsaverage(target_fn, fs_hemi, f'sub-{sub}', bids_folder, target_space = 'fsaverage') # transform to common surface space
+            transform_fsaverage(target_fn, fs_hemi, f'sub-{sub}', bids_folder, target_space = 'fsaverage5') # transform to common surface space
 
-            transform_to_fsaverage(target_fn, fs_hemi, f'sub-{sub}', bids_folder) # transform to common surface space
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

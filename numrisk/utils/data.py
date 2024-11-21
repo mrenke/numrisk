@@ -356,42 +356,27 @@ class Subject(object):
     
     def get_prf_parameters_volume(self, session, 
             run=None,
-            retroicor=False,
             smoothed=False,
-            pca_confounds=False,
             denoise=False,
             cross_validated=True,
             hemi=None,
             roi=None,
             space='fsnative',
             split_data = '',
+            return_image=False,
             keys = ['mu', 'sd', 'amplitude', 'baseline']):
 
         dir = f'encoding_model{split_data}'
         if cross_validated:
             if run is None:
                 raise Exception('Give run')
-
             dir += '.cv'
-
         if denoise:
             dir += '.denoise'
-
-        if (retroicor) and (not denoise):
-            raise Exception("When not using GLMSingle RETROICOR is *always* used!")
-
-        if retroicor:
-            key += '.retroicor'
-            
         if smoothed:
             dir += '.smoothed'
 
-        if pca_confounds:
-            dir += '.pca_confounds'
-
         parameters = []
-
-
         mask = self.get_volume_mask(session=session, roi=roi, epi_space=True)
         masker = NiftiMasker(mask)
 
@@ -406,7 +391,13 @@ class Subject(object):
             pars = pd.Series(masker.fit_transform(fn).ravel())
             parameters.append(pars)
 
-        return pd.concat(parameters, axis=1, keys=keys, names=['parameter'])
+
+        parameters =  pd.concat(parameters, axis=1, keys=keys, names=['parameter'])
+
+        if return_image:
+            return masker.inverse_transform(parameters.T)
+
+        return parameters
 
 
 
