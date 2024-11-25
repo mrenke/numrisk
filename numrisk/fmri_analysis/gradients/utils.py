@@ -67,7 +67,7 @@ def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumr
     print(dm.shape)
     return dm
 
-def cleanTS(sub, ses, remove_task_effects = False, runs = range(1, 7),space = 'fsaverage5', bids_folder='/Users/mrenke/data/ds-dnumrisk', task = 'magjudge'):
+def cleanTS(sub, ses =1, remove_task_effects = False, runs = range(1, 7),space = 'fsaverage5', bids_folder='/Users/mrenke/data/ds-dnumrisk', task = 'magjudge'):
     # load in data as timeseries and regress out confounds (for each run sepeprately)
 
     fmriprep_confounds_include = ['global_signal', 'dvars', 'framewise_displacement', 'trans_x',
@@ -124,6 +124,18 @@ def cleanTS(sub, ses, remove_task_effects = False, runs = range(1, 7),space = 'f
             print(f'sub-{sub}, run-{run} makes problems (prob. confounds ts not there) \n skipping that run') # for sub 5,47,53,62
 
     return clean_ts_runs
+
+def fit_correlation_matrix_unfiltered(sub,bids_folder):
+    mask, labeling_noParcel = get_basic_mask()
+    clean_ts = cleanTS(sub, bids_folder=bids_folder) # checks if fsav5-file exists, if not, creates it
+    seed_ts = clean_ts[mask]
+
+    from nilearn.connectome import ConnectivityMeasure
+    correlation_measure = ConnectivityMeasure(kind='correlation')
+    cm = correlation_measure.fit_transform([seed_ts.T])[0] #correlation_matrix_noParcel
+    print(f'sub-{sub}: raw connectivity matrix estimated')    
+    np.save(op.join(bids_folder, 'derivatives', 'correlation_matrices', f'sub-{sub}_unfiltered.npy'), cm)
+
 
 def fsavTofsav5(sub,ses = 1,bids_folder='/Volumes/mrenkeED/data/ds-dnumrisk',task = 'magjudge'):
     # requires fsaverage and fsaverage5 directory in bids_folder/derivatives/freesurfer !
