@@ -81,3 +81,32 @@ def fsavTofsLR(source_folder, fn, hemi, source_space='fsaverage5', target_space=
         target = transforms.fsaverage_to_fslr(source_fn, '32k',hemi=hemi)
         nib.save(target[0],target_fn) # 
         print(f'saved to {target_fn}')
+
+
+def get_nPRFs_params(sub, bids_folder,par='r2', key='encoding_model.denoise', space='fsaverage5'):
+    nPRF_dir = op.join(bids_folder,'derivatives',key,f'sub-{sub}', 'ses-1','func')
+    nPRF_fn =  op.join(nPRF_dir, f'sub-{sub}_ses-1_desc-{par}.optim.nilearn_space-{space}_hemi-L.func.gii')
+    nprf_r2_L = nib.load(nPRF_fn).agg_data()
+    nPRF_fn =  op.join(nPRF_dir, f'sub-{sub}_ses-1_desc-{par}.optim.nilearn_space-{space}_hemi-R.func.gii')
+    nprf_r2_R = nib.load(nPRF_fn).agg_data()
+    nprf_r2 = np.concatenate((nprf_r2_L, nprf_r2_R))
+    return nprf_r2
+
+def get_margGMs12_fsav5(bids_folder):
+    n_grad = 1
+    dir = op.join(bids_folder,'derivatives/gradients',f'sub-Margulies16')
+    fn =  op.join(dir, f'sub-Margulies16_grad-{n_grad}_space-fsaverage5_hemi-L.func.gii')
+    gM_L = nib.load(fn).agg_data()
+    fn =  op.join(dir, f'sub-Margulies16_grad-{n_grad}_space-fsaverage5_hemi-R.func.gii')
+    gM_R = nib.load(fn).agg_data()
+    grad1_Marg= np.concatenate((gM_L, gM_R))
+
+    n_grad = 2
+    dir = op.join(bids_folder,'derivatives/gradients',f'sub-Margulies16')
+    fn =  op.join(dir, f'sub-Margulies16_grad-{n_grad}_space-fsaverage5_hemi-L.func.gii')
+    gM_L = nib.load(fn).agg_data()
+    fn =  op.join(dir, f'sub-Margulies16_grad-{n_grad}_space-fsaverage5_hemi-R.func.gii')
+    gM_R = nib.load(fn).agg_data()
+    grad2_Marg= np.concatenate((gM_L, gM_R))
+    
+    return np.array([grad1_Marg,grad2_Marg])

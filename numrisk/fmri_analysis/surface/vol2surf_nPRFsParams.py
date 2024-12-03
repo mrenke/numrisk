@@ -8,7 +8,7 @@ from tqdm import tqdm
 from nipype.interfaces.freesurfer import SurfaceTransform
 
 
-def transform_fsaverage(in_file, fs_hemi, source_subject, bids_folder, target_space = 'fsaverage'):
+def transform_fsaverage(in_file, fs_hemi, source_subject, bids_folder, target_space):
 
         subjects_dir = op.join(bids_folder, 'derivatives', 'freesurfer')
 

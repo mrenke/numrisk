@@ -86,3 +86,16 @@ def get_GMmargulies_cmap(skewed=True):
     return mymap
 # from : /Users/mrenke/git/gradient_analysis/03_visualize_embeddings.ipynb
 
+def get_pval_colormap():
+    skewed = True
+    first = int((128*2)-np.round(255*(1.-0.90)))
+    second = (256-first)
+    first = first if skewed else second
+    colors2 = plt.cm.cool(np.linspace(0.1, .98, first))
+    colors3 = plt.cm.spring(np.linspace(0.25, 1, second))
+
+    # combine them and build a new colormap
+    cols = np.vstack((colors2,colors3))
+    mymap = colors.LinearSegmentedColormap.from_list('my_colormap', cols[::-1])
+    return mymap
+
