@@ -134,7 +134,7 @@ def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumr
 
     events = pd.concat((stimulus1_int,stimulus1_mod, stimulus2_int, stimulus2_mod)).set_index(['trial_nr','stim_order'],append=True).sort_index()
 
-    onsets = events[['onset', 'duration', 'trial_type', 'modulation']]
+    onsets = events[['onset', 'duration', 'trial_type', 'modulation']].copy()
     onsets['onset'] = ((onsets['onset']+tr/2.) // 2.3) * 2.3
 
     frametimes = np.linspace(tr/2., (n - .5)*tr, n)
