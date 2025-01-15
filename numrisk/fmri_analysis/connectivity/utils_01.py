@@ -71,7 +71,7 @@ def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumr
     frametimes = np.linspace(tr/2., (n - .5)*tr, n)
 
     from nilearn.glm.first_level import make_first_level_design_matrix
-    dm = make_first_level_design_matrix(frametimes, onsets, 
+    dm = make_first_level_design_matrix(frametimes, onsets.dropna(), 
                                         hrf_model='spm + derivative + dispersion', 
                                         oversampling=100.,drift_order=1, 
                                         drift_model=None).drop('constant', axis=1)
