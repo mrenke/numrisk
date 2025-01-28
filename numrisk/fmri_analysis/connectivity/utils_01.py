@@ -65,18 +65,35 @@ def get_events_confounds(sub, ses, run, bids_folder='/Users/mrenke/data/ds-dnumr
 
     events = pd.concat((stimulus1_int,stimulus1_mod, stimulus2_int, stimulus2_mod)).set_index(['trial_nr','stim_order'],append=True).sort_index()
 
-    onsets = events[['onset', 'duration', 'trial_type', 'modulation']].copy()
+    onsets = events[['onset', 'duration', 'trial_type', 'modulation']].copy() #  
     onsets['onset'] = ((onsets['onset']+tr/2.) // 2.3) * 2.3
 
     frametimes = np.linspace(tr/2., (n - .5)*tr, n)
 
+    # Suppress specific warning messages did not work so far 
     from nilearn.glm.first_level import make_first_level_design_matrix
     dm = make_first_level_design_matrix(frametimes, onsets.dropna(), 
-                                        hrf_model='spm + derivative + dispersion', 
-                                        oversampling=100.,drift_order=1, 
-                                        drift_model=None).drop('constant', axis=1)
+                                            hrf_model='spm + derivative + dispersion', 
+                                            oversampling=100.,drift_order=1, 
+                                            drift_model=None).drop('constant', axis=1)
+                                  
     dm /= dm.max()
-    print('Design matrix created to remove task effects. shape:')
-    print(dm.shape)
+    #print('Design matrix created to remove task effects. shape:')
+    #print(dm.shape)
     return dm
+
+
+def get_NPC_mask(bids_folder, space='fsaverage5', hemi='both'):
+    surf_mask_L = op.join(bids_folder, 'derivatives/surface_masks', f'desc-NPC_L_space-{space}_hemi-lh.label.gii')
+    surf_mask_L = nib.load(surf_mask_L).agg_data()
+    surf_mask_R = op.join(bids_folder, 'derivatives/surface_masks', f'desc-NPC_R_space-{space}_hemi-rh.label.gii')
+    surf_mask_R = nib.load(surf_mask_R).agg_data()
+    if hemi == 'both':
+        nprf_r2 = np.concatenate((surf_mask_L, surf_mask_R))
+    elif hemi == 'L':
+        nprf_r2 = np.concatenate((surf_mask_L, np.zeros(len(surf_mask_R))))
+    elif hemi == 'R':   
+        nprf_r2 = np.concatenate((np.zeros(len(surf_mask_L)), surf_mask_R))
+        
+    return np.bool_(nprf_r2)
 

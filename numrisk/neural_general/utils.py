@@ -83,7 +83,8 @@ def fsavTofsLR(source_folder, fn, hemi, source_space='fsaverage5', target_space=
         print(f'saved to {target_fn}')
 
 
-def get_nPRFs_params(sub, bids_folder,par='r2', key='encoding_model.denoise', space='fsaverage5'):
+def get_nPRFs_params(sub, bids_folder,par='r2',  space='fsaverage5'): # key='encoding_model.denoise',
+    key ='encoding_model.cv.denoise'if par =='cvr2' else 'encoding_model.denoise'
     nPRF_dir = op.join(bids_folder,'derivatives',key,f'sub-{sub}', 'ses-1','func')
     nPRF_fn =  op.join(nPRF_dir, f'sub-{sub}_ses-1_desc-{par}.optim.nilearn_space-{space}_hemi-L.func.gii')
     nprf_r2_L = nib.load(nPRF_fn).agg_data()
@@ -110,3 +111,15 @@ def get_margGMs12_fsav5(bids_folder):
     grad2_Marg= np.concatenate((gM_L, gM_R))
     
     return np.array([grad1_Marg,grad2_Marg])
+
+def get_NPC_mask(bids_folder, space='fsaverage5'):
+    surf_mask_L = op.join(bids_folder, 'derivatives/surface_masks', f'desc-NPC_L_space-{space}_hemi-lh.label.gii')
+    surf_mask_L = nib.load(surf_mask_L).agg_data()
+    surf_mask_R = op.join(bids_folder, 'derivatives/surface_masks', f'desc-NPC_R_space-{space}_hemi-rh.label.gii')
+    surf_mask_R = nib.load(surf_mask_R).agg_data()
+    nprf_r2 = np.concatenate((surf_mask_L, surf_mask_R))
+    #mask, labeling_noParcel = get_basic_mask()
+    #nprf_r2_mask = np.bool_(nprf_r2[mask])
+    nprf_r2 = np.bool_(nprf_r2)
+
+    return nprf_r2
