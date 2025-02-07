@@ -32,8 +32,8 @@ def main(sub='All',bids_folder='/mnt_03/ds-dnumrisk', N_components=3):
     for i, g in enumerate(gm.gradients_.T): # 
         grad[i] = map_to_labels(g, labeling_noParcel, mask=mask, fill=np.nan)
 
-    np.save(op.join(target_dir,f'sub-{sub}_gradients{specification}.npy'), grad) # save all together
-    np.save(op.join(target_dir,f'sub-{sub}_gms{specification}.npy'), gm.gradients_) # save just in case
+    np.save(op.join(target_dir,f'sub-{sub}_gradients{specification}.npy'), grad) # for plotting
+    np.save(op.join(target_dir,f'sub-{sub}_gms{specification}.npy'), gm.gradients_) # for alignment reference! 
     np.save(op.join(target_dir,f'sub-{sub}_lambdas{specification}.npy'), gm.lambdas_) 
 
 if __name__ == '__main__':

@@ -24,3 +24,18 @@ def npFileTofsLRGii(sub, specification='',bids_folder='/Users/mrenke/data/ds-dnu
             out_file = op.join(target_dir, f'sub-{sub}_task-{task}_space-{target_space}_hemi-{hemi}_grad{n_grad}{specification}.surf.gii') # _ses-{ses}
             nib.save(gii_im_fslr[0],out_file)
             print(f'saved to {out_file}')
+
+from numrisk.fmri_analysis.gradients.utils import get_basic_mask
+
+def get_nPRF_mask(bids_folder='/mnt_03/ds-dnumrisk'):
+    # get masks
+    surf_mask_L = op.join(bids_folder, 'derivatives/surface_masks', 'desc-NPC_L_space-fsaverage5_hemi-lh.label.gii')
+    surf_mask_L = nib.load(surf_mask_L).agg_data()
+    surf_mask_R = op.join(bids_folder, 'derivatives/surface_masks', 'desc-NPC_R_space-fsaverage5_hemi-rh.label.gii')
+    surf_mask_R = nib.load(surf_mask_R).agg_data()
+    nprf_r2 = np.concatenate((surf_mask_L, surf_mask_R))
+
+    mask, labeling_noParcel = get_basic_mask()
+    nprf_r2_mask = np.bool_(nprf_r2)
+    #print('mask shape:' + np.shape(nprf_r2))
+    return nprf_r2_mask
