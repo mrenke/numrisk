@@ -14,9 +14,9 @@ module load gpu cuda
 . $HOME/.bashrc.sh
 
 module load mamba
+conda init
 source activate numrefields
 
 export PARTICIPANT_LABEL=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
 
-source activate tf2-gpu
-python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/fit_2D_prf_cv.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mixture_model --same_rfs
+python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/fit_2D_prf.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --mixture_model --same_rfs --smoothed
