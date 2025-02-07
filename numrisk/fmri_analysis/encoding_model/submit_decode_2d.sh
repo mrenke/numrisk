@@ -19,4 +19,4 @@ source activate numrefields
 
 export PARTICIPANT_LABEL=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
 
-python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_2D.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --two_dimensional --mixture_model --same_rfs
+python $HOME/git/numrisk/numrisk/fmri_analysis/encoding_model/decode_2D.py $PARTICIPANT_LABEL --bids_folder /shares/zne.uzh/mrenke/ds-dnumrisk --two_dimensional --mixture_model --same_rfs --n_voxels 100
