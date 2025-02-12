@@ -17,8 +17,8 @@ stimulus_range = np.linspace(0, 6, 1000)
 # stimulus_range = np.log(np.arange(400))
 space = 'T1w'
 
-def main(subject, smoothed, pca_confounds, bids_folder='/data',
-denoise=True, retroicor=False, mask='NPC_R', split_data = None):
+def main(subject, smoothed,  bids_folder='/data',
+    denoise=True, mask='NPC_R', split_data = None):
     
     session = 1
 
@@ -40,15 +40,6 @@ denoise=True, retroicor=False, mask='NPC_R', split_data = None):
     if smoothed:
         target_dir += '.smoothed'
 
-    if (retroicor) and (not denoise):
-        raise Exception("When not using GLMSingle RETROICOR is *always* used!")
-
-    if retroicor:
-        target_dir += '.retroicor'
-
-    if pca_confounds:
-        target_dir += '.pca_confounds'
-
     target_dir = op.join(bids_folder, 'derivatives', target_dir, f'sub-{subject}', 'func')
 
     if not op.exists(target_dir):
@@ -60,7 +51,7 @@ denoise=True, retroicor=False, mask='NPC_R', split_data = None):
     paradigm = paradigm.droplevel(['subject'])
     paradigm = paradigm['log(n1)']
 
-    data = sub.get_single_trial_volume(session, roi=mask,split_data=split_data, smoothed=smoothed, pca_confounds=pca_confounds, denoise=denoise, retroicor=retroicor).astype(np.float32)
+    data = sub.get_single_trial_volume(session, roi=mask,split_data=split_data, smoothed=smoothed, denoise=denoise).astype(np.float32)
     data.index = paradigm.index
     print(data)
 
@@ -128,8 +119,8 @@ denoise=True, retroicor=False, mask='NPC_R', split_data = None):
         train_data, train_paradigm = data.drop(test_run, level='run').copy(), paradigm.drop(test_run, level='run').copy()
 
         pars = sub.get_prf_parameters_volume(session, cross_validated=True,
-                denoise=denoise, retroicor=retroicor,
-                smoothed=smoothed, pca_confounds=pca_confounds,
+                denoise=denoise, 
+                smoothed=smoothed, 
                 run=test_run, roi=mask)
 
         model = GaussianPRF(parameters=pars)
@@ -181,16 +172,13 @@ if __name__ == '__main__':
     #parser.add_argument('session', default=None)
     parser.add_argument('--bids_folder', default='/data')
     parser.add_argument('--smoothed', action='store_true')
-    parser.add_argument('--pca_confounds', action='store_true')
     parser.add_argument('--denoise', action='store_true')
-    parser.add_argument('--retroicor', action='store_true')
     parser.add_argument('--mask', default='NPC_R')
     parser.add_argument('--split_data', default=None)
 
     args = parser.parse_args()
 
-    main(args.subject, args.smoothed, args.pca_confounds, # args.session,
+    main(args.subject, args.smoothed, # args.session,
             denoise=args.denoise,
-            retroicor=args.retroicor,
             bids_folder=args.bids_folder, mask=args.mask,
             split_data = args.split_data)
