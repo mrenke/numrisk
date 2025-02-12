@@ -35,7 +35,7 @@ def get_decoding_info(subject, session=1,n_stim=1,  bids_folder='/data/ds-dnumri
 
         return E
     else:
-        print(pdf)
+        print(f'problems with: {pdf}')
         return pd.DataFrame(np.zeros((0, 0)))
 
 
