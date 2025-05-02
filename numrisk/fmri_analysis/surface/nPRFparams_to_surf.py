@@ -4,7 +4,7 @@ from numrisk.utils.data import Subject
 from nilearn import surface
 import nibabel as nb
 #from numrisk.fmri_analysis.encoding_model.fit_nprf import get_key_target_dir
-from tqdm import tqdm
+#from tqdm import tqdm
 from nipype.interfaces.freesurfer import SurfaceTransform
 
 def transform_fsaverage(in_file, fs_hemi, source_subject, bids_folder, target_space = 'fsaverage'):
