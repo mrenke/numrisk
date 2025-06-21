@@ -20,6 +20,7 @@ def cleanup_behavior(df_, drop_no_responses=True):
 
         #df['risky_left'] = df_[('prob1', 'stimulus')] == 0.55
         df['risky_left'] = df['prob1'] == 0.55
+        df['chose_left'] = (df['choice'] == 1.0)
         df['chose_risky'] = (df['risky_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
         df.loc[df.choice.isnull(), 'chose_risky'] = np.nan
 
@@ -83,11 +84,10 @@ def get_behavior(subject_list=None, bids_folder = '/Users/mrenke/data/ds-dnumris
     df_all = pd.concat(df_all) 
     df_all.columns = df_all.columns.droplevel(1) #weird multiindex with "trial_type"
 
-    df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
-    df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
+    #df_participants = pd.read_csv(op.join('/Users/mrenke/data/ds-dnumrisk/add_tables','subjects_recruit_scan_scanned-final.csv'), header=0) #, index_col=0
+    #df_participants = df_participants.loc[:,['subject ID', 'age','group','gender']].rename(mapper={'subject ID': 'subject'},axis=1).dropna().astype({'subject': int, 'group': int}).set_index('subject')
     #df_participants=df_participants.loc[1:42,:]
-
-    df_all = df_all.join(df_participants['group'], on='subject',how='left') 
+    #df_all = df_all.join(df_participants['group'], on='subject',how='left') 
     
     return df_all
 
