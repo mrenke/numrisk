@@ -17,12 +17,11 @@ def extract_data(subject, bids_folder='/data'):
 
     fn = op.join(dir, f'sub-{subject:02d}.edf')
     asc_fn = fn.replace('.edf', '.asc')
-    gaze_target_fn = fn.replace('.edf', '.gaz.gz')
-
     edf2acs_cmd = '/home/ubuntu/git/riskeye/edf2asc'
 
     # get gaze
-    cmd = f'{edf2acs_cmd}  -t -y -z -v -s -vel {fn}'
+    cmd = f'{edf2acs_cmd}  -t -y -z -v -s -vel {fn}'# outputs sample data only
+    gaze_target_fn = fn.replace('.edf', '.gaz.gz')
 
     subprocess.run(cmd, shell=True)
 
@@ -31,7 +30,7 @@ def extract_data(subject, bids_folder='/data'):
     os.remove(asc_fn)
 
     # get messages
-    cmd = f'{edf2acs_cmd}   -t -y -z -v -e {fn}'
+    cmd = f'{edf2acs_cmd}   -t -y -z -v -e {fn}' # outputs event data only
     msg_target_fn = fn.replace('.edf', '.msg.gz')
 
     subprocess.run(cmd, shell=True)
