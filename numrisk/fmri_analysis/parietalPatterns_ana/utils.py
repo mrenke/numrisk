@@ -1,0 +1,75 @@
+from nilearn import image
+import numpy as np
+import os.path as op
+import nibabel as nib
+import os
+from nilearn import signal
+import pandas as pd
+from nipype.interfaces.freesurfer import SurfaceTransform # needs the fsaverage & fsaverage5 in ..derivatives/freesurfer folder!
+from nilearn import datasets
+import sys
+import glob
+
+def get_NPC_mask(bids_folder_orig = '/mnt_03/ds-dnumrisk', space = 'fsaverage5'):
+    surf_mask_L = op.join(bids_folder_orig, 'derivatives/surface_masks', f'desc-NPC_L_space-{space}_hemi-lh.label.gii')
+    surf_mask_L = nib.load(surf_mask_L).agg_data()
+    surf_mask_R = op.join(bids_folder_orig, 'derivatives/surface_masks', f'desc-NPC_R_space-{space}_hemi-rh.label.gii')
+    surf_mask_R = nib.load(surf_mask_R).agg_data()
+    nprf_r2 = np.concatenate((surf_mask_L, surf_mask_R))
+
+    nprf_r2 = np.bool_(nprf_r2)
+    return nprf_r2
+
+# plotting gradients
+
+import nilearn.plotting as nplt
+import matplotlib.pyplot as plt
+from  nilearn.datasets import fetch_surf_fsaverage
+
+def plot_grads(grad, title=''):
+    fsaverage = fetch_surf_fsaverage() # default 5
+    side_view = 'medial'
+    cmap = 'jet'
+    n_comp = 5
+
+    figure, axes = plt.subplots(nrows=1, ncols=n_comp,figsize = (15,4), subplot_kw=dict(projection='3d'))
+    for i in range(0,n_comp):
+        gm = np.split(grad[i],2) # for i, hemi in enumerate([‘L’, ‘R’]): --> left first
+        gm_r = gm[1]
+        nplt.plot_surf(surf_mesh= fsaverage.infl_right, surf_map= gm_r, # infl_right # pial_right
+                    view= side_view,cmap=cmap, colorbar=False,  # sub-{sub}, title=f’grad {i+1}‘,
+                    bg_map=fsaverage.sulc_right, bg_on_data=True,darkness=0.7 ,axes=axes[i]) #
+        axes[i].set(title=f'grad {i+1}')
+    figure.suptitle(title, y=0.9)
+
+
+from matplotlib.colors import ListedColormap
+import hcp_utils as hcp
+ 
+def plot_nets_CAcolors(modules_fsav5,  hemi_to_plot = 'R', title =None):
+    rgb = np.array(list(hcp.ca_network['rgba'].values())[1:])
+
+    grey = np.array([[0.5, 0.5, 0.5, 1.0]])  # RGBA format: grey with full opacity
+    cmap_ca = ListedColormap( np.vstack([grey, rgb]))
+
+    fsaverage = fetch_surf_fsaverage('fsaverage5') 
+    views = ['medial','lateral','dorsal','posterior']
+    cmap = cmap_ca #'Paired'#''viridis' # 
+
+    i_hemi_to_plot = 0 if hemi_to_plot == 'L' else 1  
+    modules_fsav5_hemi = np.split(modules_fsav5,2)[i_hemi_to_plot]
+
+    surf_mesh = fsaverage.infl_right if hemi_to_plot =='R' else fsaverage.infl_left
+    bg_map = fsaverage.sulc_right if hemi_to_plot =='R' else fsaverage.sulc_left
+
+    figure, axes = plt.subplots(nrows=1, ncols=len(views),figsize = (15,8), subplot_kw=dict(projection='3d'))
+    for i,view in enumerate(views):
+        colbar = True if view == 'posterior' else False
+        nplt.plot_surf(surf_mesh=surf_mesh , surf_map= modules_fsav5_hemi, avg_method = 'median',# infl_right # pial_right
+                view= view,cmap=cmap, colorbar=colbar, #title=f'sub-{sub}, grad {n_grad+1}',
+                vmin = 0, vmax=12,
+                bg_map=bg_map, bg_on_data=True,darkness=0.7, axes=axes[i]) 
+    figure.subplots_adjust(wspace=0.01)
+    figure.suptitle(title, y=0.92)
+
+    return figure

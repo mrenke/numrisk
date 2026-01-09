@@ -28,7 +28,7 @@ def extract_data(subject, bids_folder='/data'):
 
     with open(asc_fn, 'rb') as asc_file, gzip.open(gaze_target_fn, 'wb') as target_file:
             target_file.writelines(asc_file)
-    os.remove(asc_fn)
+    #os.remove(asc_fn)
 
     # get messages
     cmd = f'{edf2acs_cmd}   -t -y -z -v -e {fn}'
@@ -38,7 +38,7 @@ def extract_data(subject, bids_folder='/data'):
 
     with open(asc_fn, 'rb') as asc_file, gzip.open(msg_target_fn, 'wb') as target_file:
             target_file.writelines(asc_file)
-    os.remove(asc_fn)
+    #os.remove(asc_fn)
 
 def get_experimental_messages(subject, bids_folder='/data'):
     subject = int(subject)
