@@ -2,6 +2,8 @@ import os.path as op
 import pandas as pd
 import numpy as np
 #from riskeye.utils import get_header_length_csv
+def get_header_length_csv(fn):
+    return pd.read_csv(fn, delim_whitespace=True, nrows=0).shape[1]
 
 def get_outliers():
     return ['58']
@@ -46,7 +48,7 @@ def get_all_behavior(include_no_responses=False, bids_folder='/Users/mrenke/data
 
     return df
 
-def get_all_eyepos_info(source='eyepos', summarize=True, only_leftright=True, bids_folder='/data/ds-riskeye', exclude_outliers=True):
+def get_all_eyepos_info(source='eyepos', summarize=True, only_leftright=True, bids_folder='/Users/mrenke/data/ds-dnumrisk', exclude_outliers=True):
     if summarize:
         df =  pd.read_csv(op.join(bids_folder, 'derivatives', 'pupil', f'group_source-{source}_fixations_summary.tsv'),
                         index_col=['subject',    'trial', 'n_saccades'], sep='\t', dtype={'subject':str})
@@ -220,34 +222,29 @@ class Subject(object):
 
 
     def get_eyeposition(self, trialwise=True): # needs runs... 
-        eyepos = []
 
-        runs = list(range(1, 6))
-        for run in runs:
+        fn = op.join(self.bids_folder, 'derivatives', 'pupil', f'sub-{self.subject_id}', 'func', f'sub-{self.subject_id}_gaze.tsv.gz')
+        n_cols = get_header_length_csv(fn)
+        if n_cols == 11:
+            cols = ['time', 'L_gaze_X', 'L_gaze_Y', 'L_pupil_size', 'L_vel_X', 'L_vel_Y', 'null', 'target_x', 'target_y', 'target_distance', 'null2']
+        elif n_cols == 12:
+            cols = ['time', 'L_gaze_X', 'L_gaze_Y', 'L_pupil_size', 'R_gaze_X', 'R_gaze_Y', 'R_pupil_size', 'L_vel_X', 'L_vel_Y', 'R_vel_X', 'R_vel_Y', 'null2']
+        elif n_cols == 7:
+            cols = ['time', 'L_gaze_X', 'L_gaze_Y', 'L_pupil_size', 'L_vel_X', 'L_vel_Y', 'null']
+        eyepos =pd.read_csv(fn,
+                        delim_whitespace=True, index_col=0,
+                        names=cols, na_values='.',
+                        usecols=['time', 'L_gaze_X', 'L_gaze_Y'])
+        eyepos.fillna(method='ffill')
+        eyepos.index = pd.TimedeltaIndex(eyepos.index, unit='ms')
+        eyepos = pd.DataFrame(eyepos)
 
-            fn = op.join(self.bids_folder, 'derivatives', 'pupil', f'sub-{self.subject_id}', 'func', f'sub-{self.subject_id}_run-{run}_gaze.tsv.gz')
-            n_cols = get_header_length_csv(fn)
-
-            if n_cols == 11:
-                cols = ['time', 'L_gaze_X', 'L_gaze_Y', 'L_pupil_size', 'L_vel_X', 'L_vel_Y', 'null', 'target_x', 'target_y', 'target_distance', 'null2']
-            elif n_cols == 12:
-                cols = ['time', 'L_gaze_X', 'L_gaze_Y', 'L_pupil_size', 'R_gaze_X', 'R_gaze_Y', 'R_pupil_size', 'L_vel_X', 'L_vel_Y', 'R_vel_X', 'R_vel_Y', 'null2']
-            elif n_cols == 7:
-                cols = ['time', 'L_gaze_X', 'L_gaze_Y', 'L_pupil_size', 'L_vel_X', 'L_vel_Y', 'null']
-
-            e =pd.read_csv(fn,
-                           delim_whitespace=True, index_col=0,
-                           names=cols, na_values='.',
-                           usecols=['time', 'L_gaze_X', 'L_gaze_Y'])
-            e.fillna(method='ffill')
-            e.index = pd.TimedeltaIndex(e.index, unit='ms')
-            eyepos.append(e)
-
-        eyepos = pd.concat((pd.concat(eyepos, keys=runs, names=['run']), ), keys=[self.subject_id], names=['subject']).sort_index()
-
-        median = eyepos['L_gaze_X'].median()
-        bins = [-np.inf, median-350, median-100, median-75, median+75, median+100, median+350, np.inf]
-
+        # define fixation targets
+        median = 1000 # df['end_x'].median()
+        dist_to_median_out= 750
+        dist_to_median = 250
+        #bins = [-np.inf, median-350, median-100, median-75, median+75, median+100, median+350, np.inf]
+        bins = [-np.inf, median-dist_to_median_out, median-dist_to_median, median-75, median+75, median+dist_to_median, median+dist_to_median_out, np.inf]
         eyepos['fixation_target']  = pd.cut(eyepos['L_gaze_X'], bins=bins,
                                             labels=['outside_left', 'left_option', 'center_left', 'fixation', 'center_right', 'right_option', 'outside_right'])
 
@@ -256,15 +253,21 @@ class Subject(object):
             messages = pd.to_timedelta(messages, unit='ms').unstack('type')
 
             # non-responses take 4500 ms
-            messages.loc[messages['response'].isnull(), 'response'] = messages.loc[messages['response'].isnull(), 'gfx'] + pd.to_timedelta(4500, 'ms')
+            messages.loc[messages['response'].isnull(), 'response'] = messages.loc[messages['response'].isnull()] + pd.to_timedelta(4500, 'ms')
 
             trialwise_eyepos = []
-
             for ix, row in messages.iterrows():
-                e = eyepos.loc[(ix[0], ix[1], slice(row.gfx, row.response)), :]
-                trialwise_eyepos.append(e.droplevel([0, 1]))
-
+                if pd.notnull(row.stim) and pd.notnull(row.response):
+                    e = eyepos.loc[slice(row.stim, row.response)]
+                    trialwise_eyepos.append(e)
+                else:
+                # handle or skip this case
+                    continue
             trialwise_eyepos = pd.concat(trialwise_eyepos, keys=messages.index)
-            return trialwise_eyepos
+            trialwise_eyepos = trialwise_eyepos.reset_index()
+            trialwise_eyepos['trial'] = trialwise_eyepos['trial'].astype(int)
+            trialwise_eyepos = trialwise_eyepos.set_index(['subject','trial','time'])
+            trialwise_eyepos = trialwise_eyepos[trialwise_eyepos.index.get_level_values('trial') != 0] # remove trial 0, which is not a real trial
+            return trialwise_eyepos.sort_index()
 
         return eyepos
