@@ -1,0 +1,19 @@
+model {
+  for (n in 1:Ngroups) {
+  		xbeta.n.mu[n] ~ dnorm(0, 0.0000001) # prior slope
+  		xbeta.n.sigma[n]~ dunif(0.0001, 100) # prior slope error
+  }
+  for (s in 1:Nsubj) {
+      xbeta.s[s] ~ dnorm(xbeta.n.mu[groupIdx[s]], 1/xbeta.n.sigma[groupIdx[s]]^2)
+  }
+  
+  for (i in 1:Ntotal) {
+
+    pr[i] <- ilogit(0 + xbeta.s[subIdx[i]]*x[i])
+    #pr[i] <- probit(0 + xbeta.s[subIdx[i]]*x[i])
+		y[i] ~ dbern(pr[i])
+
+	}
+
+
+}
