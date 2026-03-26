@@ -1,7 +1,46 @@
 import os.path as op
 import pandas as pd
 import numpy as np
-#from riskeye.utils import get_header_length_csv
+
+#from behavior_risk.utils import get_data
+from numrisk.behavior_risk.utils import get_behavior, get_data
+
+def get_eyetrack_df(bids_folder='/Users/mrenke/data/ds-dnumrisk'):
+
+    format = 'non-symbolic'
+    df_behav = get_data()
+    df_behav = df_behav.xs(1,0,'session').xs(format,0,'format')
+
+    source = 'eyepos' #'saccades'
+    summarized_fixations = pd.read_csv(op.join(bids_folder,f'derivatives/pupil/group_source-{source}_fixations_summary.tsv'), sep='\t')
+    summarized_fixations['trial_nr'] = summarized_fixations['trial'].astype(int)
+    summarized_fixations.set_index(['subject','trial_nr'], inplace=True)
+
+    df = df_behav.join(summarized_fixations)
+    df['n_saccades'] = df['n_saccades'].where((df['n_saccades'] < 9), np.nan) # remove outliers
+    df = df.dropna(subset=['n_saccades'])
+
+    df['n_right'] = df['n1']
+    df['n_left'] = df['n2']
+    df['p_right'] = df['prob1']
+    df['p_left'] = df['prob2']
+
+    df['n1'] = df['n_left'].where(df['first_saccade'] == 'left_option', df['n_right'])
+    df['p1'] = df['p_left'].where(df['first_saccade'] == 'left_option', df['p_right'])
+    df['n2'] = df['n_left'].where(df['first_saccade'] == 'right_option', df['n_right'])
+    df['p2'] = df['p_left'].where(df['first_saccade'] == 'right_option', df['p_right'])
+    
+    df['last_saccade_risky'] = (df['last_saccade'] == 'left_option') & (df['risky_left'])
+    df['last_saccade_safe'] = (~df['last_saccade_risky'])
+
+    df['first_saccade_risky'] = (df['first_saccade'] == 'left_option') & (df['risky_left'])
+    df['first_saccade_safe'] = (~df['first_saccade_risky'])
+
+    df['first_saccade_left'] = (df['first_saccade'] == 'left_option')
+    df['last_saccade_left'] = (df['first_saccade'] == 'left_option') 
+
+    return df
+
 def get_header_length_csv(fn):
     return pd.read_csv(fn, delim_whitespace=True, nrows=0).shape[1]
 

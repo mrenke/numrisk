@@ -1,0 +1,23 @@
+model {
+
+  xbeta.mu ~ dnorm(0, 0.0000001) # prior slope
+  xbeta.sig ~ dunif(0.0001, 100) # prior slope error
+  
+  for (n in 1:Ngroups) {
+  		xbeta.n.mu[n] ~ dnorm(xbeta.mu, 1/xbeta.sig^2)
+  		xbeta.n.sigma[n]~ dunif(0.0001, 100) # prior slope error, ? or should it also be drawn from a prior estimate
+  }
+  for (s in 1:Nsubj) {
+      xbeta.s[s] ~ dnorm(xbeta.n.mu[groupIdx[s]], 1/xbeta.n.sigma[groupIdx[s]]^2)
+  }
+  
+  for (i in 1:Ntotal) {
+
+    #pr[i] <- ilogit(0 + xbeta.s[subIdx[i]]*x[i])
+    pr[i] <- probit(0 + xbeta.s[subIdx[i]]*x[i])
+		y[i] ~ dbinom(pr[i], n_trials)
+
+	}
+
+
+}

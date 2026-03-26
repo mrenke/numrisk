@@ -110,6 +110,35 @@ def build_model(model_label, df):
                                     polynomial_order=5, 
                                     fit_seperate_evidence_sd = False,
                                     )
+    elif model_label == '11': # FlexNoise SAME for safe (n1) & risky (n2) & 2 prior mus and SDs
+        model = FlexibleNoiseRiskRegressionModel(df, 
+                                    regressors = {}, # 
+                                    prior_estimate = 'full',
+                                    polynomial_order=5, 
+                                    fit_seperate_evidence_sd = False,
+                                    )
+    elif model_label == '11reg': # FlexNoise SAME for safe (n1) & risky (n2) & 2 prior mus and SDs
+        model = FlexibleNoiseRiskRegressionModel(df, 
+                                    regressors = {'evidence_sd':'group','risky_prior_sd':'group','safe_prior_sd':'group' }, # 
+                                    prior_estimate = 'full',
+                                    polynomial_order=5, 
+                                    fit_seperate_evidence_sd = False,
+                                    )
+        
+    elif model_label == '12': # like model-8 but Natural Space! different evidences & prior_mus (but same prior_sd) for safe (n1) & risky (n2) options 
+        model = RiskRegressionModel(df, 
+                                    regressors = {},
+                                    prior_estimate = 'fix_prior_sd',   # 2 prior mus but fix prior sd - takes natural space into account                              
+                                    fit_seperate_evidence_sd = True,  # different evidences for safe (n1) & risky (n2) options
+                                    natural_space = True                # natural space specifciation!! (default =  False)
+                                    )
+    elif model_label == '12reg': # Natural Space! different evidences & prior_mus (but same prior_sd) for safe (n1) & risky (n2) options 
+        model = RiskRegressionModel(df, 
+                                    regressors = {'n1_evidence_sd':'group', 'n2_evidence_sd':'group','risky_prior_mu':'group','safe_prior_mu':'group'},
+                                    prior_estimate = 'fix_prior_sd',   # 2 prior mus but fix prior sd - takes natural space into account                              
+                                    fit_seperate_evidence_sd = True,  # different evidences for safe (n1) & risky (n2) options
+                                    natural_space = True                # natural space specifciation!! (default =  False)
+                                    )
     else :
         raise ValueError(f'Unknown model label: {model_label}')
     
