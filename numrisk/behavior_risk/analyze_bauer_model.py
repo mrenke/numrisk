@@ -10,21 +10,31 @@ import numpy as np
 import seaborn as sns
 from bauer.utils.bayes import softplus
 import pandas as pd
+from os import listdir, remove
 
 from utils import get_data
 from utils_02 import build_model, get_rnp
-
-def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic',col_wrap=5, only_ppc=False, # AUC=False,E_dif=False, 
-plot_traces=False):
-    sns.set_context('talk')
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
-    df = get_data(bids_folder)
+def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic',col_wrap=5, only_ppc=False, # AUC=False,E_dif=False, 
+        plot_traces=False,
+        remove_subjects = False, remove_sub_string = '32-40-45-46-50'):
+        
+    sns.set_context('talk')
 
+    subject_list = [f[4:] for f in listdir(bids_folder) if f[0:3] == 'sub' and len(f) == 6]
+    if remove_subjects:
+        remove_sub_list = [int(s) for s in remove_sub_string.split('-')]
+        subject_list = [subject for subject in subject_list if subject not in remove_sub_list]
+    
+    df = get_data(bids_folder,subject_list)
+    df = df.xs(format,0, level='format')
     model = build_model(model_label, df)
     model.build_estimation_model()
 
+    if remove_subjects:
+        model_label = f'{model_label}_rem-{remove_sub_string}'
     idata = az.from_netcdf(op.join(bids_folder, f'derivatives/cogmodels_risk/model-{model_label}_format-{format}_trace.netcdf'))
 
     target_folder = op.join(bids_folder, f'derivatives/cogmodels_risk/figures/{model_label}_format-{format}')
@@ -79,8 +89,6 @@ plot_traces=False):
 
 
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('model_label', default=None)
@@ -91,6 +99,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--only_ppc', action='store_true')
     parser.add_argument('--no_trace', dest='plot_traces', action='store_false')
+    parser.add_argument('--remove_subjects', action='store_true') #default=False)
+    parser.add_argument('--remove_sub_string', default='32-40-45-46-50') # default='32-40-45-46-50'
     args = parser.parse_args()
 
-    main(args.model_label, bids_folder=args.bids_folder, only_ppc=args.only_ppc, plot_traces=args.plot_traces, format=args.format) # , AUC=args.AUC, E_dif=args.E_dif
+    main(args.model_label, bids_folder=args.bids_folder, only_ppc=args.only_ppc, plot_traces=args.plot_traces, format=args.format, remove_subjects=args.remove_subjects, remove_sub_string=args.remove_sub_string) # , AUC=args.AUC, E_dif=args.E_dif

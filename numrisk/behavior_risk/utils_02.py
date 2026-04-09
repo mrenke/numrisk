@@ -118,8 +118,17 @@ def build_model(model_label, df):
                                     fit_seperate_evidence_sd = False,
                                     )
     elif model_label == '11reg': # FlexNoise SAME for safe (n1) & risky (n2) & 2 prior mus and SDs
+        # evidence_sd:'group' removed: probit model found no general group noise effect (p_bayes=0.267)
+        # group regressors target prior SD asymmetry only, consistent with probit RNP:SS finding (p_bayes=0.979)
+        model = FlexibleNoiseRiskRegressionModel(df,
+                                    regressors = {'risky_prior_sd':'group','safe_prior_sd':'group' },
+                                    prior_estimate = 'full',
+                                    polynomial_order=5,
+                                    fit_seperate_evidence_sd = False,
+                                    )
+    elif model_label == '11breg': # FlexNoise SAME for safe (n1) & risky (n2) & 2 prior mus and SDs
         model = FlexibleNoiseRiskRegressionModel(df, 
-                                    regressors = {'evidence_sd':'group','risky_prior_sd':'group','safe_prior_sd':'group' }, # 
+                                    regressors = {'safe_prior_sd':'group'}, # 
                                     prior_estimate = 'full',
                                     polynomial_order=5, 
                                     fit_seperate_evidence_sd = False,
@@ -138,6 +147,25 @@ def build_model(model_label, df):
                                     prior_estimate = 'fix_prior_sd',   # 2 prior mus but fix prior sd - takes natural space into account                              
                                     fit_seperate_evidence_sd = True,  # different evidences for safe (n1) & risky (n2) options
                                     natural_space = True                # natural space specifciation!! (default =  False)
+                                    )
+    elif model_label == '13': # Normal RiskRegression + full prior (asymmetric prior SDs & mus for risky vs safe), shared evidence SD
+        # Completes the 2x2 grid:
+        #   evidence SD asymmetry (n1≠n2) → model-8 / 8reg
+        #   prior SD asymmetry (risky≠safe) → model-13 / 13reg   ← this
+        #   FlexNoise equivalents: model-9/9reg and model-11/11reg already exist
+        model = RiskRegressionModel(df,
+                                    regressors = {},
+                                    prior_estimate = 'full',         # free risky_prior_mu, risky_prior_sd, safe_prior_mu, safe_prior_sd
+                                    fit_seperate_evidence_sd = False, # shared evidence SD (asymmetry lives entirely in priors)
+                                    )
+    elif model_label == '13reg': # model-13 + group regressors on asymmetric prior SDs
+        # evidence_sd:'group' omitted: probit model found no general group noise effect (p_bayes=0.267)
+        # group regressors target prior SD asymmetry only, consistent with probit RNP:SS finding (p_bayes=0.979)
+        model = RiskRegressionModel(df,
+                                    regressors = {'risky_prior_sd': 'group',
+                                                  'safe_prior_sd':  'group'},
+                                    prior_estimate = 'full',
+                                    fit_seperate_evidence_sd = False,
                                     )
     else :
         raise ValueError(f'Unknown model label: {model_label}')
