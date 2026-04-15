@@ -21,7 +21,7 @@ def cleanup_behavior(df_, drop_no_responses=True):
         #df['risky_left'] = df_[('prob1', 'stimulus')] == 0.55
         df['risky_left'] = df['prob1'] == 0.55
         df['chose_left'] = (df['choice'] == 1.0)
-        df['chose_risky'] = (df['risky_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))
+        df['chose_risky'] = ((df['risky_left'] & (df['choice'] == 1.0)) | (~df['risky_left'] & (df['choice'] == 2.0))).astype(object)
         df.loc[df.choice.isnull(), 'chose_risky'] = np.nan
 
         df['n_risky'] = df['n1'].where(df['risky_left'], df['n2'])

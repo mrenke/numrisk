@@ -12,17 +12,158 @@ def summarize_posterior(samples):
         'p_gt_0': np.round(np.mean(samples > 0), 3)
     }
 
-def fit_slope(rnp_sample, group=None, fmt=None):
-    """Fit a line of RNP ~ n_safe for a given group/format subset. Returns (slope, intercept)."""
-    tmp = rnp_sample.copy()
+def fit_slope(sample, col='rnp', group=None, fmt=None):
+    """Fit a line of <col> ~ n_safe for a given group/format subset.
+
+    Parameters
+    ----------
+    sample : DataFrame with columns including 'n_safe', <col>, and optionally
+             'group' / 'format' as columns (after reset_index).
+    col    : column to use as dependent variable ('rnp' or 'ind_point')
+    group  : group label to filter on (None = no filter)
+    fmt    : format string to filter on (None = no filter)
+
+    Returns (slope, intercept).
+    """
+    tmp = sample.copy()
     if group is not None:
-        tmp = tmp.xs(group, level='group')
+        tmp = tmp[tmp['group'] == group] if 'group' in tmp.columns else tmp.xs(group, level='group')
     if fmt is not None:
-        tmp = tmp.xs(fmt, level='format')
-    #tmp = tmp.reset_index('n_safe')
+        tmp = tmp[tmp['format'] == fmt] if 'format' in tmp.columns else tmp.xs(fmt, level='format')
     A = np.vstack([tmp['n_safe'], np.ones(len(tmp))]).T
-    slope, intercept = np.linalg.lstsq(A, tmp['rnp'], rcond=None)[0]
+    slope, intercept = np.linalg.lstsq(A, tmp[col], rcond=None)[0]
     return slope, intercept
+
+
+def compute_indpoint_effects(ind_point, model_name='model'):
+    """
+    Compute indifference-point-related posterior effects and return as a tidy DataFrame.
+
+    Parameters
+    ----------
+    ind_point : DataFrame with column 'ind_point', indexed by at least
+                (chain, draw, subject, group, n_safe).
+                May optionally include a 'format' index level (both-format models).
+    model_name : str
+
+    Returns
+    -------
+    pd.DataFrame with columns: model, effect, mean, ci_low, ci_high, p_gt_0
+
+    Effects always reported
+    -----------------------
+    ind_point             — overall mean indifference point
+    ind_point:group       — Dyscalculic minus Control
+    ind_point:SS          — slope of ind_point ~ n_safe (Control baseline)
+    ind_point:SS:group    — group modulation of that slope (Dysc − Ctrl)
+
+    Additional effects when 'format' index level is present
+    -------------------------------------------------------
+    ind_point:format          — non-symbolic minus symbolic
+    ind_point:SS:format       — format modulation of SS slope
+    ind_point:SS:format:group — 3-way interaction
+    """
+    # Work only on the numeric column — drop helpers like 'group_label' added by callers
+    ind_point = ind_point[['ind_point']]
+
+    n_chains   = ind_point.index.unique('chain').values
+    n_draws    = ind_point.index.unique('draw').values
+    has_format = 'format' in ind_point.index.names
+
+    # Resolve group labels: support both numeric (0/1) and string ('Control'/'Dyscalculic')
+    group_vals = ind_point.index.unique('group').tolist()
+    if 0 in group_vals or 1 in group_vals:
+        grp_ctrl, grp_dysc = 0, 1
+    else:
+        grp_ctrl, grp_dysc = 'Control', 'Dyscalculic'
+
+    # ── 1. Simple contrasts ──────────────────────────────────────────────── #
+    rows = []
+
+    simple_effects = {'ind_point': ind_point}
+    if has_format:
+        simple_effects['ind_point:format'] = (
+            ind_point.xs('non-symbolic', level='format')
+            - ind_point.xs('symbolic',   level='format')
+        )
+    simple_effects['ind_point:group'] = (
+        ind_point.xs(grp_dysc, level='group')
+        - ind_point.xs(grp_ctrl, level='group')
+    )
+
+    for name, posterior in simple_effects.items():
+        stats = summarize_posterior(posterior['ind_point'].values.ravel())
+        rows.append({'model': model_name, 'effect': name, **stats})
+
+    # ── 2. Slope-based effects (iterate over chain × draw) ───────────────── #
+    slope_keys = ['ctrl', 'dysc']
+    if has_format:
+        slope_keys += ['nonsym', 'sym', 'ctrl_nonsym', 'ctrl_sym', 'dysc_nonsym', 'dysc_sym']
+    slope_store = {k: [] for k in slope_keys}
+
+    # which (grp, fmt) pairs to fit — format pairs only when level exists
+    pairs = [
+        ('ctrl', (grp_ctrl, None)),
+        ('dysc', (grp_dysc, None)),
+    ]
+    if has_format:
+        pairs += [
+            ('nonsym',      (None,       'non-symbolic')),
+            ('sym',         (None,       'symbolic')),
+            ('ctrl_nonsym', (grp_ctrl,   'non-symbolic')),
+            ('ctrl_sym',    (grp_ctrl,   'symbolic')),
+            ('dysc_nonsym', (grp_dysc,   'non-symbolic')),
+            ('dysc_sym',    (grp_dysc,   'symbolic')),
+        ]
+
+    for chain, draw in product(n_chains, n_draws):
+        sample = (ind_point
+                  .xs(chain, level='chain')
+                  .xs(draw,  level='draw')
+                  .reset_index())
+        for key, (grp, fmt) in pairs:
+            slope, _ = fit_slope(sample, col='ind_point', group=grp, fmt=fmt)
+            slope_store[key].append(slope)
+
+    slope_store = {k: np.array(v) for k, v in slope_store.items()}
+
+    slope_effects = {
+        'ind_point:SS':       slope_store['ctrl'],
+        'ind_point:SS:group': slope_store['dysc'] - slope_store['ctrl'],
+    }
+    if has_format:
+        slope_effects['ind_point:SS:format'] = (
+            slope_store['sym'] - slope_store['nonsym']
+        )
+        slope_effects['ind_point:SS:format:group'] = (
+            (slope_store['dysc_sym'] - slope_store['dysc_nonsym'])
+            - (slope_store['ctrl_sym'] - slope_store['ctrl_nonsym'])
+        )
+
+    for name, posterior in slope_effects.items():
+        stats = summarize_posterior(posterior)
+        rows.append({'model': model_name, 'effect': name, **stats})
+
+    return pd.DataFrame(rows, columns=['model', 'effect', 'mean', 'ci_low', 'ci_high', 'p_gt_0'])
+
+
+def save_indpoint_effects(ind_point, model_name, csv_path='indpoint_effects.csv'):
+    """
+    Compute indifference-point effects and append to (or create) a CSV file.
+    Existing rows for the same model_name are replaced.
+    """
+    df_new = compute_indpoint_effects(ind_point, model_name=model_name)
+
+    try:
+        df_existing = pd.read_csv(csv_path)
+        df_existing = df_existing[df_existing['model'] != model_name]
+        df_out = pd.concat([df_existing, df_new], ignore_index=True)
+    except FileNotFoundError:
+        df_out = df_new
+
+    df_out.to_csv(csv_path, index=False)
+    print(f"Saved {len(df_new)} effects for '{model_name}' → {csv_path}")
+    return df_new
 
 
 def compute_rnp_effects(rnp, model_name='model'):

@@ -59,7 +59,7 @@ def plot_ppc(df, ppc, plot_type=1, var_name='ll_bernoulli', level='subject', col
     # print(ppc)
     ppc_summary = summarize_ppc(ppc, groupby=groupby)
     #print(ppc_summary)
-    p = df.groupby(groupby).mean()[['chose_risky']]
+    p = df.groupby(groupby).mean(numeric_only=True)[['chose_risky']]
     #print(p)
     # ppc_summary = pd.concat((p, ppc_summary), axis=1).sort_index()
     ppc_summary = ppc_summary.join(p).reset_index()
