@@ -50,7 +50,7 @@ def plot_ppc(df, ppc, plot_type=1, var_name='ll_bernoulli', level='subject', col
         raise NotImplementedError
 
     if level == 'group':
-        ppc = ppc.groupby(['subject', 'group']+groupby).mean()
+        ppc = ppc.groupby(['subject', 'group']+groupby).mean(numeric_only=True)
         groupby = ['group'] + groupby
 
     if level == 'subject':

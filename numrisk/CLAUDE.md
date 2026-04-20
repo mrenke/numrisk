@@ -118,3 +118,15 @@ Preprocessed BOLD (fmriprep output, 4D NIfTI)
 ### Notebooks
 
 ~100 Jupyter notebooks contain exploratory and paper-quality analyses. The primary active notebooks are `behavior_risk/probit_model1.ipynb` and `visualize&plots&stats/paperRisk_01.ipynb`.
+
+### Key Scripts / Notebooks by Purpose
+
+| Purpose | Location |
+|---|---|
+| IQ scores from IDS-2 screener (reads `add_measure_1/2/3.xlsx`, saves `iq-scores_ids2.csv`) | `prepare/extract_measures_iq.ipynb` |
+| Working memory measures (raw Excel → `derivatives/phenotype/`) | `prepare/extract_measures_workingmemory.ipynb` |
+| Math skill, anxiety & confidence (raw Excel → `derivatives/phenotype/`) | `prepare/extract_measures_math.ipynb` |
+| Cross-measure correlations & regressions | `behavior_general/across-measur_ana.ipynb` |
+| Paper figures & stats for risk task | `visualize&plots&stats/paper_riskDD_*.ipynb` |
+| Behavioral model fitting (CLI) | `behavior_risk/fit_bauerModels.py` |
+| Posterior analysis & group comparisons | `behavior_risk/analyze_bauer_model*.py` |

@@ -2,7 +2,7 @@ import os.path as op
 import os
 import numpy as np
 import pandas as pd
-from bauer.models import RiskRegressionModel, PowerLawNoiseRiskRegressionModel
+from bauer.models import RiskRegressionModel, PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel
 import arviz as az
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -18,6 +18,7 @@ def build_model(model_label, df):
 
     'power'  — PowerLawNoiseRiskRegressionModel: power-law magnitude-dependent noise,
                fix_prior_sd, separate noise intercepts per option.
+
     """
     if model_label == 'risk':
         model = RiskRegressionModel(df,
@@ -47,6 +48,13 @@ def build_model(model_label, df):
                                     prior_estimate='fix_prior_sd',
                                     fit_seperate_evidence_sd=True,
                                     )
+    elif model_label == 'affineNoise': # gilles version of Weber's law not holding...
+        model = AffineNoiseRiskModel(df,
+                                    #regressors={},
+                                    prior_estimate='fix_prior_sd',
+                                    fit_seperate_evidence_sd=True,
+                                    )
+    
     else:
         raise ValueError(f'Unknown model label: {model_label}')
 

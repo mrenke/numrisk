@@ -14,7 +14,7 @@ from os import listdir, remove
 
 from utils import get_data
 from utils_02 import build_model, get_rnp
-from bauer.models import PowerLawNoiseRiskRegressionModel
+from bauer.models import PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
@@ -56,7 +56,15 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-s
 
         par_helper = par if par != 'rnp' else 'evidence_sd'
 
-        for regressor, t in traces.groupby(par_helper+'_regressors'):
+        regressors_key = par_helper + '_regressors'
+        if regressors_key in traces.index.names:
+            groups = traces.groupby(regressors_key)
+        else:
+            # No regressors dimension (e.g. affineNoise with regressors={}):
+            # treat the whole posterior as a single "Intercept" group
+            groups = [('Intercept', traces)]
+
+        for regressor, t in groups:
             t = t.copy()
             print(regressor, t)
             if ('sd' in par) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
@@ -81,13 +89,16 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-s
                     plt.axvline(np.log(df['n_safe']).mean(), c='k', ls='--', lw=2)
                 elif par == 'safe_prior_sd':
                     plt.axvline(np.log(df['n_safe']).std(), c='k', ls='--')
-            
+
             sns.despine()
             plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'), bbox_inches='tight')
             plt.close()
 
     if isinstance(model, PowerLawNoiseRiskRegressionModel):
         plot_sd_curves(idata, df, target_folder)
+
+    if isinstance(model, AffineNoiseRiskModel):
+        plot_sd_curves_affine(idata, df, target_folder)
 
 
 
@@ -154,6 +165,56 @@ def plot_sd_curves(idata, df, target_folder):
     sns.despine()
     plt.tight_layout()
     plt.savefig(op.join(target_folder, 'sd_curves.pdf'), bbox_inches='tight')
+    plt.close()
+
+
+def plot_sd_curves_affine(idata, df, target_folder):
+    """Plot σ(n) = softplus(β₀ + β₁·n̂) for AffineNoiseRiskModel.
+
+    n̂ = (n - n_min) / (n_max - n_min).  Shows group-level posterior mean +
+    94% interval for n1 (safe) and n2 (risky), plus Weber's law reference.
+    """
+    from bauer.utils.bayes import softplus as softplus_fn
+
+    post = idata.posterior
+    n_min = df[['n1', 'n2']].min().min()
+    n_max = df[['n1', 'n2']].max().max()
+    x = np.linspace(n_min, n_max, 100)
+    x_norm = (x - n_min) / (n_max - n_min)  # n̂
+
+    def _group_curves(var):
+        b0 = post[f'{var}_spline1_mu'].values.ravel()  # intercept
+        b1 = post[f'{var}_spline2_mu'].values.ravel()  # slope
+        linear = b0[:, None] + b1[:, None] * x_norm[None, :]
+        return softplus_fn(linear)
+
+    sd_n1 = _group_curves('n1_evidence_sd')
+    sd_n2 = _group_curves('n2_evidence_sd')
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
+    for ax, sd, label, color in zip(
+            axes,
+            [sd_n1, sd_n2],
+            ['safe (n1)', 'risky (n2)'],
+            ['steelblue', 'tomato']):
+        ax.fill_between(x, np.percentile(sd, 3, axis=0), np.percentile(sd, 97, axis=0),
+                        color=color, alpha=0.25)
+        ax.plot(x, sd.mean(axis=0), color=color, lw=2, label=label)
+
+        # Weber's law anchored at midpoint
+        mid = len(x) // 2
+        anchor = sd.mean(axis=0)[mid]
+        ax.plot(x, anchor * (x / x[mid]), 'k--', lw=1, alpha=0.5, label="Weber's law")
+
+        ax.set_xlabel('Magnitude (n)')
+        ax.set_ylabel('σ(n)')
+        ax.set_title(label)
+        ax.legend(fontsize=9)
+        sns.despine(ax=ax)
+
+    plt.suptitle('AffineNoise: σ(n) = softplus(β₀ + β₁·n̂)  [94% posterior interval]')
+    plt.tight_layout()
+    plt.savefig(op.join(target_folder, 'sd_curves_affine.pdf'), bbox_inches='tight')
     plt.close()
 
 

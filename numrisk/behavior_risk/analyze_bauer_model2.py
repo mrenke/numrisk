@@ -18,7 +18,7 @@ from bauer.utils.bayes import softplus
 import pandas as pd
 from os import listdir, remove
 
-def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic', col_wrap=5,
+def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='symbolic', col_wrap=5,
         remove_subjects = True, remove_sub_string = '32-40-45-46-50'):
 
 # behav_fit3
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('model_label', default=None)
     parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumrisk')
-    parser.add_argument('--format', default='non-symbolic')
+    parser.add_argument('--format', default='symbolic')
     parser.add_argument('--keep_all_subjects', action='store_false', dest='remove_subjects')
     parser.add_argument('--remove_sub_string', default='32-40-45-46-50') # default='32-40-45-46-50'
 
