@@ -368,3 +368,167 @@ def plot_risky_bayerian_inference(mu_prior, std_prior,
     plt.scatter([mu_post_n2*0.55], [y2], color=palette[0], zorder=10)
 
     return fig, ax
+
+def plot_risky_bayInf_diffDist(mu_prior, std_prior,
+                                    mu_n1, sd_n1, 
+                                    mu_n2, sd_n2,
+                                    mu_post_n1, sd_post_n1, 
+                                    mu_post_n2, sd_post_n2,
+                                    x = np.linspace(1.5, 5.5, 1000),
+                                    palette = sns.color_palette('coolwarm', 4)#[::-1]
+                                  ):
+    import matplotlib.pyplot as plt
+    import scipy.stats as ss
+
+    sns.set_theme('paper', 'white', font='helvetica', font_scale=1.25, palette='tab10')
+
+    def plot_dist(mu, sd, y=0.0,color=None, shade=True, **kwargs):
+        plt.plot(x, y+ss.norm(loc=mu, scale=sd).pdf(x), color=color, **kwargs, alpha=.8)
+        if shade:
+            plt.fill_between(x,y,y+ ss.norm(loc=mu, scale=sd).pdf(x), alpha=0.3, color=color)
+        sns.despine()
+
+    y0 = 0
+    y1 = -1.5
+    y2 = -3
+    y3 = -5
+
+    fig, ax = plt.subplots(1, 1, figsize=(4.5, 3.5))
+
+    # y0: likelihood and prior 
+    plot_dist(mu_prior, std_prior, color='black', label='Prior')
+    plot_dist(mu_n1, sd_n1, color=palette[3], label='n1')
+    plot_dist(mu_n2, sd_n2, color=palette[0], label='n2')
+    plt.axis('off')
+    # annotations
+    x_anot_offset = 0. # negative when likelihood larger than prior
+    y_anot_offset = 1.4
+    ax.annotate('Prior', (mu_prior, 0.65), ha='center', va='bottom')
+    ax.annotate('safe', (mu_n1-x_anot_offset,y_anot_offset), ha='center', va='bottom', color=palette[3])
+    ax.annotate('risky', (mu_n2-x_anot_offset, y_anot_offset), ha='center', va='bottom', color=palette[0])
+    # arrow
+    plt.annotate('', xytext=(mu_n1, 0), xy=(mu_post_n1, 0), arrowprops={"facecolor":palette[3], 'edgecolor':'black', "linewidth":1., 'shrink':0.05,'headlength':6}) #, 'headlength':6
+    plt.annotate('', xytext=(mu_n2, 0), xy=(mu_post_n2, 0), arrowprops={"facecolor":palette[0], 'edgecolor':'black', "linewidth":1., 'shrink':0.05,'headlength':6}) #, 'headlength':6
+    # gray baselines
+    plt.axhline(0, color='grey', lw=2)
+    plt.axhline(y1, color='grey', lw=2)
+    plt.axhline(y2, color='grey', lw=2)
+    ax.annotate(f'Payoff \nlikelihoods', (-2, 0.0+0.5), ha='left', va='center',fontsize=10)
+    ax.annotate(f'Posteriors', (-2,y1+0.5), ha='left', va='center',fontsize=10)
+    ax.annotate('Expected \nvalue', (-2, y2+0.5), ha='left', va='center',fontsize=10)
+
+
+    # y0-y1:likelihood - posterior connecting lines
+    plt.plot([mu_n1, mu_post_n1], [0,y1], color=palette[3], ls='--')
+    plt.plot([mu_n2, mu_post_n2], [0,y1], color=palette[0], ls='--')
+
+    # y1: posterior beneath
+    plot_dist(mu_post_n1, sd_post_n1, color=palette[3], label='n1', y=y1)
+    plot_dist(mu_post_n2, sd_post_n2, color=palette[0], label='n2', y=y1)
+
+
+    # y1-y2: connecting
+    #ax.annotate('* p=0.55', (mu_post_n2-0.2, -2.5),  ha='left', va='center', color=palette[0],fontsize=9)
+    #ax.annotate('* p=1.0', (mu_post_n1, -2.5),  ha='left', va='center', color=palette[3],fontsize=9)
+    #plt.plot([mu_post_n1,mu_post_n1 ], [y1,y1-1.5], color=palette[3], ls='-')
+    #plt.plot([mu_post_n2,mu_post_n2*0.55 ], [y1,y1-1.5], color=palette[0], ls='-')
+
+
+    # y2: posteriors in log-EV space
+    mu_post_n2 = mu_post_n2 * 0.55 # R_RNP
+    plot_dist(mu_post_n1, sd_post_n1, color=palette[3], label='n1', y=y2)
+    plot_dist(mu_post_n2, sd_post_n2, color=palette[0], label='n2', y=y2)
+    # overlay the overlap region
+    pdf1 = ss.norm(loc=mu_post_n1, scale=sd_post_n1).pdf(x)
+    pdf2 = ss.norm(loc=mu_post_n2, scale=sd_post_n2).pdf(x)
+    plt.fill_between(x, y2, y2 + np.minimum(pdf1, pdf2), alpha=0.5, color='purple')
+    # 
+    plt.plot([mu_post_n1,mu_post_n1 ], [y2-0.2,y2+1.], color=palette[3], ls='--')
+    plt.plot([mu_post_n2,mu_post_n2 ], [y2-0.2,y2+1.], color=palette[0], ls='--')
+
+    # y3: difference distribution in log-EV space with risk-neutral reference point
+    decision_reference = np.mean(x) # 
+    diff_mu = (mu_post_n2 - mu_post_n1) + decision_reference# different scale for illustrative purposes
+    diff_sd = np.sqrt(sd_post_n1**2 + sd_post_n2**2)
+    # plot centrally 
+    #plot_dist(diff_mu+decision_reference, diff_sd, color='grey', label='n2 - n1', y=y3)
+    zoom_in_factor = 5
+    pdf_diff = ss.norm(loc=diff_mu, scale=diff_sd).pdf(x)
+    plt.plot(x, y3+pdf_diff, color='grey', alpha=.8)
+    plt.fill_between(x, y3, y3 + pdf_diff,
+                 where=(x >= decision_reference),
+                 alpha=0.8, color='purple')  # n1 color
+    plt.fill_between(x, y3, y3 + pdf_diff,
+                 where=(x <= decision_reference),
+                 alpha=0.8, color='yellow')  # n1 color
+    plt.plot([decision_reference,decision_reference ], [y3,y3+1.5], color='grey', ls='-')
+    plt.plot([diff_mu,diff_mu], [y3,y3+1.5], color='purple', ls='--')
+
+    # gray baselines
+    [plt.axhline(y, color='grey', lw=2) for y in [y0, y1, y2,y3]]
+    ax.set_ylim(-6, 1.5)
+
+    return fig, ax
+
+
+def get_posterior(mu1, sd1, mu2, sd2):
+    var1, var2 = sd1**2, sd2**2
+    return mu1 + (var1/(var1+var2))*(mu2 - mu1), np.sqrt((var1*var2)/(var1+var2))
+
+from scipy import stats as ss
+
+def plot_probit_curves(ax, s_c_small, s_c_large, sigma_c, sigma_x, mu_p, sigma_p):
+    """
+    Psychometric (probit) curves: P(choose risky) vs log(x/c).
+
+    The decision signal is:
+        delta = mu_post_x - mu_post_c + log(p_risky)
+    The log(p_risky) term shifts the RNP rightward (risk-neutral point > 0),
+    because the risky option must compensate for p < 1.
+
+    Symmetric noise (KLW / H1):
+        delta = (1-w)*log_ratio + log(p)
+        RNP   = -log(p) / (1-w)  =  log(1/0.55) / (1-w)
+        → RNP shifts RIGHT as sigma increases (larger w → smaller 1-w)
+        → slope (gamma) decreases with sigma
+        → small/large stake curves still OVERLAP (no stake-size interaction)
+
+    Asymmetric noise (H2, sigma_x > sigma_c):
+        delta gains an extra term (w_c - w_x)*(s_c - mu_p) that flips sign
+        across mu_p  →  curves SEPARATE for small vs large stakes
+    """
+    P_RISKY = 0.55    # probability of the risky outcome
+
+
+    log_ratios = np.linspace(-1, 2.5, 300)
+    log_p      = np.log(P_RISKY)          # ≈ -0.598
+
+    # Posterior SDs depend only on sigma (not the mean)
+    _, sd_pc = get_posterior(0, sigma_c, mu_p, sigma_p)
+    _, sd_px = get_posterior(0, sigma_x, mu_p, sigma_p)
+    sigma_delta = np.sqrt(sd_pc**2 + sd_px**2)
+
+    # Shrinkage weights
+    w_c = sigma_c**2 / (sigma_c**2 + sigma_p**2)
+    w_x = sigma_x**2 / (sigma_x**2 + sigma_p**2)
+
+    for s_c, ls, lbl, color in [(s_c_small, '-',  'Small stakes',  "#6B91C3" ),
+                          (s_c_large, '--', 'Large stakes',  "#12396B" )]:
+        mu_pc   = (1 - w_c) * s_c + w_c * mu_p
+        delta_0 = (1 - w_x) * s_c + w_x * mu_p - mu_pc   # stake-size offset
+        delta   = (1 - w_x) * log_ratios + delta_0 + log_p  # include p=0.55
+        p_risky = ss.norm.cdf(delta / sigma_delta)
+
+        ax.plot(log_ratios, p_risky, color=color, ls=ls, lw=3.0, label=lbl)
+
+    ax.axhline(0.5, color='gray', ls=':', lw=0.8, alpha=0.7)
+    ax.axvline(0.0, color='gray', ls=':', lw=0.8, alpha=0.7)
+    ax.set_xlabel('log(risky / safe)', fontsize=9)
+    ax.set_ylabel('P(choose risky)', fontsize=9)
+    ax.set_ylim(-0.02, 1.02)
+    ax.set_xlim(-1, 2.5)
+    ax.set_yticks([0, 0.5, 1])
+    #ax.set_xticks([-1, 0, 1])
+    ax.tick_params(labelsize=8)
+    ax.legend(fontsize=8, loc='upper left')
+    sns.despine(ax=ax)
