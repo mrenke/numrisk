@@ -2,7 +2,8 @@ import os.path as op
 import os
 import numpy as np
 import pandas as pd
-from bauer.models import RiskRegressionModel, PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel
+from bauer.models import RiskRegressionModel, FlexibleNoiseRiskRegressionModel, PowerLawNoiseRiskRegressionModel,  AffineNoiseRiskModel, PowerLawEncodingRiskModel, PowerLawEncodingRiskRegressionModel
+
 import arviz as az
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -34,6 +35,15 @@ def build_model(model_label, df):
                                     prior_estimate='fix_prior_sd',
                                     fit_seperate_evidence_sd=True,
                                     )
+    elif model_label == '11breg': # FlexNoise SAME for safe (n1) & risky (n2) & 2 prior mus and SDs
+        model = FlexibleNoiseRiskRegressionModel(df, 
+                                    regressors = {'safe_prior_sd':'group'}, # 
+                                    prior_estimate = 'full',
+                                    polynomial_order=5, 
+                                    fit_seperate_evidence_sd = False,
+                                    )
+        
+
     elif model_label == 'power':
         model = PowerLawNoiseRiskRegressionModel(df,
                                     regressors={},
@@ -54,7 +64,68 @@ def build_model(model_label, df):
                                     prior_estimate='fix_prior_sd',
                                     fit_seperate_evidence_sd=True,
                                     )
-    
+    elif model_label == 'powerLawEncoding': # 
+        model = PowerLawEncodingRiskModel(df,
+                                    #regressors={},
+                                    # prior_estimate='fix_prior_sd', defaults to fit_prior=False - otherwise dievergence issues
+                                    fit_seperate_evidence_sd=True,
+                                    )
+    elif model_label == 'powerLawEncoding_regression0': # 
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={},
+                                    fit_seperate_evidence_sd=True,
+                                    )
+    elif model_label == 'powerLawEncoding_regression': # no group alpha regression
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={'alpha': 'group','n1_evidence_sd': 'group', 'n2_evidence_sd': 'group'},
+                                    fit_seperate_evidence_sd=True,
+                                    fit_prior_mu=False,
+                                    )
+    elif model_label == 'powerLawEncoding_regression2': # no group alpha regression
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={'n1_evidence_sd': 'group', 'n2_evidence_sd': 'group'},
+                                    fit_seperate_evidence_sd=True,
+                                    fit_prior_mu=False,
+                                    )
+    elif model_label == 'powerLawEncoding2': # 
+        model = PowerLawEncodingRiskModel(df,
+                                     fit_prior_mu=False, # added this to differentiate from next one
+                                    )
+    elif model_label == 'powerLawEncoding3': # 
+        model = PowerLawEncodingRiskModel(df,
+                                     fit_prior_mu=True, 
+                                     fit_seperate_evidence_sd=False,
+                                    )
+    elif model_label == 'powerLawEncoding3_regression0': # 
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={},
+                                    fit_prior_mu=True, 
+                                    fit_seperate_evidence_sd=False,
+                                    )
+    elif model_label == 'powerLawEncoding3_regression': # 
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={'alpha': 'group'},
+                                     fit_prior_mu=True, 
+                                     fit_seperate_evidence_sd=False,
+                                    )
+    elif model_label == 'powerLawEncoding4': # 
+        model = PowerLawEncodingRiskModel(df,
+                                    #regressors={'alpha': 'group', 'n1_evidence_sd': 'group', 'n2_evidence_sd': 'group'},
+                                     fit_prior_mu=True, 
+                                     fit_seperate_evidence_sd=True,
+                                    )
+    elif model_label == 'powerLawEncoding4_regression': # 
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={'alpha': 'group', 'n1_evidence_sd': 'group', 'n2_evidence_sd': 'group'},
+                                     fit_prior_mu=True, 
+                                     fit_seperate_evidence_sd=True,
+                                    )
+    elif model_label == 'powerLawEncoding4_regression2': # 
+        model = PowerLawEncodingRiskRegressionModel(df,
+                                    regressors={'n1_evidence_sd': 'group'},# , 'n2_evidence_sd': 'group' #'alpha': 'group', 'risky_prior_mu': 'group', 'safe_prior_mu': 'group'},
+                                     fit_prior_mu=True, 
+                                     fit_seperate_evidence_sd=True,
+                                    )                        
     else:
         raise ValueError(f'Unknown model label: {model_label}')
 
