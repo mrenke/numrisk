@@ -14,11 +14,12 @@ from os import listdir, remove
 
 from utils import get_data
 from utils_02 import build_model, get_rnp
-from bauer.models import PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel
+from bauer.models import PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel, PowerLawEncodingRiskModel
+from bauer.utils.bayes import softplus as _softplus
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
-def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic',#col_wrap=5, AUC=False,E_dif=False, 
+def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='symbolic',#col_wrap=5, AUC=False,E_dif=False, 
         plot_traces=True,
         remove_subjects = True, remove_sub_string = '32-40-45-46-50'):
 
@@ -94,73 +95,78 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-s
             plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'), bbox_inches='tight')
             plt.close()
 
-    if isinstance(model, PowerLawNoiseRiskRegressionModel):
-        plot_sd_curves(idata, df, target_folder)
-
-    if isinstance(model, AffineNoiseRiskModel):
-        plot_sd_curves_affine(idata, df, target_folder)
+    if isinstance(model, (PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel, PowerLawEncodingRiskModel)):
+        plot_sd_curves(idata, df, target_folder, model)
 
 
 
 
 
-def plot_sd_curves(idata, df, target_folder):
-    """Plot SD(n) = exp(intercept) * n^noise_exponent for PowerLaw models.
+def _flat(arr):
+    """Flatten chain+draw dims, keeping any trailing dims (regressors, subjects)."""
+    return arr.reshape(-1, *arr.shape[2:])
 
-    Log-log axes: the power law is a straight line, slope = noise_exponent.
-    Shows group-level posterior mean + 94% HDI band, individual subject means,
-    and Weber's law (slope=1) as a reference.
+
+def _intercept(arr):
+    """Select the Intercept regressor (last dim index 0) and flatten chain/draw."""
+    return _flat(arr)[..., 0] if arr.ndim > 2 else _flat(arr)
+
+
+def _grp_powerlawnoise(post, x, key):
+    ic = _intercept(post[key + '_mu'].values)
+    ex = _intercept(post['noise_exponent_mu'].values)
+    return np.exp(ic[:, None] + ex[:, None] * np.log(x)[None, :])
+
+
+def _sub_powerlawnoise(post, x, key):
+    ic = _flat(post[key].values).mean(axis=0)[..., 0]
+    ex = _flat(post['noise_exponent'].values).mean(axis=0)[..., 0]
+    return np.exp(ic[:, None] + ex[:, None] * np.log(x)[None, :])
+
+
+def _grp_affine(post, x_norm, key):
+    b0 = _flat(post[f'{key}_spline1_mu'].values).ravel()
+    b1 = _flat(post[f'{key}_spline2_mu'].values).ravel()
+    return _softplus(b0[:, None] + b1[:, None] * x_norm[None, :])
+
+
+def _grp_encoding(post, x, key, alpha_grp):
+    sd_rep = _softplus(_intercept(post[key + '_mu'].values))
+    return sd_rep[:, None] / (alpha_grp[:, None] * x[None, :] ** (alpha_grp[:, None] - 1))
+
+
+def _sub_encoding(post, x, key):
+    def _sub_mean(v):
+        m = _flat(v).mean(axis=0)
+        return m[..., 0] if m.ndim > 1 else m  # select Intercept only when regressors dim exists
+
+    alpha_s = _sub_mean(post['alpha'].values)
+    sd_s    = _softplus(_sub_mean(post[key].values))
+    return sd_s[:, None] / (alpha_s[:, None] * x[None, :] ** (alpha_s[:, None] - 1))
+
+
+def _draw_curves(x, curve_specs, ylabel, title, target_folder):
+    """Shared plot: group HDI band + mean, optional subject thin lines, Weber ref.
+
+    curve_specs: list of (grp_arr, sub_arr_or_None, color, label)
     """
-    post = idata.posterior
-    x = np.exp(np.linspace(np.log(df[['n1', 'n2']].min().min()),
-                           np.log(df[['n1', 'n2']].max().max()), 100))
-
-    def _group_curves(intercept_key):
-        intercepts = post[intercept_key + '_mu'].values[..., 0].ravel()  # Intercept only
-        exponents  = post['noise_exponent_mu'].values[..., 0].ravel()
-        return np.exp(intercepts[:, None] + exponents[:, None] * np.log(x)[None, :])
-
-    def _subject_curves(intercept_key):
-        intercepts = post[intercept_key].values.mean(axis=(0, 1))[..., 0]  # (subject,)
-        exponents  = post['noise_exponent'].values.mean(axis=(0, 1))[..., 0]
-        return np.exp(intercepts[:, None] + exponents[:, None] * np.log(x)[None, :])
-
-    sd_n1_group = _group_curves('n1_log_sd_intercept')
-    sd_n2_group = _group_curves('n2_log_sd_intercept')
-    sd_n1_subj  = _subject_curves('n1_log_sd_intercept')
-    sd_n2_subj  = _subject_curves('n2_log_sd_intercept')
-
-    exp_mean = float(post['noise_exponent_mu'].sel(noise_exponent_regressors='Intercept').values.mean())
-    exp_hdi  = az.hdi(idata, var_names=['noise_exponent_mu'])['noise_exponent_mu'].sel(noise_exponent_regressors='Intercept').values
-
     fig, ax = plt.subplots(figsize=(6, 5))
+    mid = len(x) // 2
 
-    # individual subjects
-    for curve in sd_n1_subj:
-        ax.plot(x, curve, color='steelblue', alpha=0.15, lw=0.8)
-    for curve in sd_n2_subj:
-        ax.plot(x, curve, color='tomato', alpha=0.15, lw=0.8)
+    for grp, sub, color, label in curve_specs:
+        if sub is not None:
+            for curve in sub:
+                ax.plot(x, curve, color=color, alpha=0.15, lw=0.8)
+        ax.fill_between(x, np.percentile(grp, 3, axis=0), np.percentile(grp, 97, axis=0),
+                        color=color, alpha=0.25)
+        ax.plot(x, grp.mean(axis=0), color=color, lw=2, label=label)
 
-    # group HDI
-    ax.fill_between(x, np.percentile(sd_n1_group, 3, axis=0), np.percentile(sd_n1_group, 97, axis=0),
-                    color='steelblue', alpha=0.25)
-    ax.fill_between(x, np.percentile(sd_n2_group, 3, axis=0), np.percentile(sd_n2_group, 97, axis=0),
-                    color='tomato', alpha=0.25)
+    anchor = curve_specs[0][0].mean(axis=0)[mid]
+    ax.plot(x, anchor * (x / x[mid]), 'k--', lw=1, alpha=0.5, label="Weber's law (slope=1)")
 
-    # group mean
-    ax.plot(x, sd_n1_group.mean(axis=0), color='steelblue', lw=2, label='safe (n1)')
-    ax.plot(x, sd_n2_group.mean(axis=0), color='tomato',    lw=2, label='risky (n2)')
-
-    # Weber's law reference anchored at midpoint of n1 group mean
-    mid   = len(x) // 2
-    anchor = sd_n1_group.mean(axis=0)[mid]
-    ax.plot(x, anchor * (x / x[mid]) ** 1.0, 'k--', lw=1, alpha=0.5, label="Weber's law (slope=1)")
-
-    #ax.set_xscale('log')
-    #ax.set_yscale('log')
     ax.set_xlabel('Magnitude (n)')
-    ax.set_ylabel('SD(n)')
-    ax.set_title(f'noise_exponent = {exp_mean:.2f} [{exp_hdi[0]:.2f}, {exp_hdi[1]:.2f}]')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
     ax.legend()
     sns.despine()
     plt.tight_layout()
@@ -168,54 +174,70 @@ def plot_sd_curves(idata, df, target_folder):
     plt.close()
 
 
-def plot_sd_curves_affine(idata, df, target_folder):
-    """Plot σ(n) = softplus(β₀ + β₁·n̂) for AffineNoiseRiskModel.
-
-    n̂ = (n - n_min) / (n_max - n_min).  Shows group-level posterior mean +
-    94% interval for n1 (safe) and n2 (risky), plus Weber's law reference.
-    """
-    from bauer.utils.bayes import softplus as softplus_fn
-
+def plot_sd_curves(idata, df, target_folder, model):
+    """Dispatch SD-curve plotting for PowerLawNoise, AffineNoise, PowerLawEncoding."""
     post = idata.posterior
     n_min = df[['n1', 'n2']].min().min()
     n_max = df[['n1', 'n2']].max().max()
-    x = np.linspace(n_min, n_max, 100)
-    x_norm = (x - n_min) / (n_max - n_min)  # n̂
+    separate = model.fit_seperate_evidence_sd
 
-    def _group_curves(var):
-        b0 = post[f'{var}_spline1_mu'].values.ravel()  # intercept
-        b1 = post[f'{var}_spline2_mu'].values.ravel()  # slope
-        linear = b0[:, None] + b1[:, None] * x_norm[None, :]
-        return softplus_fn(linear)
+    if isinstance(model, PowerLawNoiseRiskRegressionModel):
+        x = np.exp(np.linspace(np.log(n_min), np.log(n_max), 100))
+        e_vals = _intercept(post['noise_exponent_mu'].values)
+        e_mean, e_lo, e_hi = e_vals.mean(), np.percentile(e_vals, 3), np.percentile(e_vals, 97)
+        title = f'PowerLaw: SD(n)=exp(c)·nᵉ,  e={e_mean:.2f} [{e_lo:.2f}, {e_hi:.2f}]'
+        if separate:
+            curve_specs = [
+                (_grp_powerlawnoise(post, x, 'n1_log_sd_intercept'),
+                 _sub_powerlawnoise(post, x, 'n1_log_sd_intercept'), 'steelblue', 'safe (n1)'),
+                (_grp_powerlawnoise(post, x, 'n2_log_sd_intercept'),
+                 _sub_powerlawnoise(post, x, 'n2_log_sd_intercept'), 'tomato', 'risky (n2)'),
+            ]
+        else:
+            curve_specs = [
+                (_grp_powerlawnoise(post, x, 'log_sd_intercept'),
+                 _sub_powerlawnoise(post, x, 'log_sd_intercept'), 'steelblue', 'shared noise'),
+            ]
+        ylabel = 'SD(n)'
 
-    sd_n1 = _group_curves('n1_evidence_sd')
-    sd_n2 = _group_curves('n2_evidence_sd')
+    elif isinstance(model, AffineNoiseRiskModel):
+        x = np.linspace(n_min, n_max, 100)
+        x_norm = (x - n_min) / (n_max - n_min)
+        title = 'AffineNoise: σ(n) = softplus(β₀ + β₁·n̂)'
+        if separate:
+            curve_specs = [
+                (_grp_affine(post, x_norm, 'n1_evidence_sd'), None, 'steelblue', 'safe (n1)'),
+                (_grp_affine(post, x_norm, 'n2_evidence_sd'), None, 'tomato',    'risky (n2)'),
+            ]
+        else:
+            curve_specs = [
+                (_grp_affine(post, x_norm, 'evidence_sd'), None, 'steelblue', 'shared noise'),
+            ]
+        ylabel = 'σ(n)'
 
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
-    for ax, sd, label, color in zip(
-            axes,
-            [sd_n1, sd_n2],
-            ['safe (n1)', 'risky (n2)'],
-            ['steelblue', 'tomato']):
-        ax.fill_between(x, np.percentile(sd, 3, axis=0), np.percentile(sd, 97, axis=0),
-                        color=color, alpha=0.25)
-        ax.plot(x, sd.mean(axis=0), color=color, lw=2, label=label)
+    elif isinstance(model, PowerLawEncodingRiskModel):
+        x = np.exp(np.linspace(np.log(n_min), np.log(n_max), 100))
+        alpha_grp = _intercept(post['alpha_mu'].values)
+        a_mean = float(alpha_grp.mean())
+        title = f'PowerLawEncoding: r=nᵅ, const SD in rep-space,  α={a_mean:.2f}'
+        if separate:
+            curve_specs = [
+                (_grp_encoding(post, x, 'n1_evidence_sd', alpha_grp),
+                 _sub_encoding(post, x, 'n1_evidence_sd'), 'steelblue', 'safe (n1)'),
+                (_grp_encoding(post, x, 'n2_evidence_sd', alpha_grp),
+                 _sub_encoding(post, x, 'n2_evidence_sd'), 'tomato',    'risky (n2)'),
+            ]
+        else:
+            curve_specs = [
+                (_grp_encoding(post, x, 'evidence_sd', alpha_grp),
+                 _sub_encoding(post, x, 'evidence_sd'), 'steelblue', 'shared noise'),
+            ]
+        ylabel = 'Effective SD(n)'
 
-        # Weber's law anchored at midpoint
-        mid = len(x) // 2
-        anchor = sd.mean(axis=0)[mid]
-        ax.plot(x, anchor * (x / x[mid]), 'k--', lw=1, alpha=0.5, label="Weber's law")
+    else:
+        return
 
-        ax.set_xlabel('Magnitude (n)')
-        ax.set_ylabel('σ(n)')
-        ax.set_title(label)
-        ax.legend(fontsize=9)
-        sns.despine(ax=ax)
-
-    plt.suptitle('AffineNoise: σ(n) = softplus(β₀ + β₁·n̂)  [94% posterior interval]')
-    plt.tight_layout()
-    plt.savefig(op.join(target_folder, 'sd_curves_affine.pdf'), bbox_inches='tight')
-    plt.close()
+    _draw_curves(x, curve_specs, ylabel, title, target_folder)
 
 
 if __name__ == '__main__':
@@ -224,7 +246,7 @@ if __name__ == '__main__':
     parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumrisk')
     #parser.add_argument('--AUC', action='store_true')
     #parser.add_argument('--E_dif', action='store_true')
-    parser.add_argument('--format', default='non-symbolic')
+    parser.add_argument('--format', default='symbolic')
     parser.add_argument('--no_trace', dest='plot_traces', action='store_false')
     parser.add_argument('--keep_all_subjects', action='store_false', dest='remove_subjects')
     parser.add_argument('--remove_sub_string', default='32-40-45-46-50') # default='32-40-45-46-50'
