@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **fMRI analysis**: Population receptive field (nPRF) models, GLM, connectivity, and cortical gradients
 - **DTI analysis**: Tractography and tract-based spatial statistics
 
-The study has ~42 participants (controls vs. dyscalculics), two cognitive tasks, and two number formats (symbolic Arabic numerals vs. non-symbolic dot arrays).
+The study has 66 participants (controls vs. dyscalculics), two cognitive tasks (one in scanner, one outside with eye-tracking), and for the second task (risky-choice) two number formats (symbolic Arabic numerals vs. non-symbolic dot arrays).
 
 ## Installation
 
@@ -27,7 +27,7 @@ Key external packages (not in setup.py, must be installed manually):
 
 ## Data
 
-BIDS-formatted data lives at `/Users/mrenke/data/ds-dnumrisk` (local path hardcoded in many scripts). Derivatives are written to `ds-dnumrisk/derivatives/`.
+BIDS-formatted data lives at different locations `ds-dnumrisk` on different computers, maike's local:`/Users/mrenke/data/ds-dnumrisk` (hardcoded in many scripts). Derivatives are written to `ds-dnumrisk/derivatives/`.
 
 Subject IDs: zero-padded integers (e.g., `sub-01`). Session is always `1`. fMRI runs 1–6.
 
