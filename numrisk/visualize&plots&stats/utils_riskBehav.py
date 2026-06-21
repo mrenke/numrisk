@@ -1,4 +1,5 @@
 from itertools import product
+from pyexpat import model
 import numpy as np
 import pandas as pd
 
@@ -307,7 +308,8 @@ def plot_risky_bayerian_inference(mu_prior, std_prior,
                                     mu_post_n1, sd_post_n1, 
                                     mu_post_n2, sd_post_n2,
                                     x = np.linspace(1.5, 5.5, 1000),
-                                    palette = sns.color_palette('coolwarm', 4)#[::-1]
+                                    palette = sns.color_palette('coolwarm', 4), #[::-1]
+                                    annotate_distributions=False
                                   ):
     import matplotlib.pyplot as plt
     import scipy.stats as ss
@@ -338,11 +340,12 @@ def plot_risky_bayerian_inference(mu_prior, std_prior,
     plt.plot([mu_n2, mu_post_n2], [0,y], color=palette[0], ls='--')
 
     # annotations
-    x_anot_offset = 0. # negative when likelihood larger than prior
-    y_anot_offset = 1.4
-    ax.annotate('Prior', (mu_prior, 0.65), ha='center', va='bottom')
-    ax.annotate('safe', (mu_n1-x_anot_offset,y_anot_offset), ha='center', va='bottom', color=palette[3])
-    ax.annotate('risky', (mu_n2-x_anot_offset, y_anot_offset), ha='center', va='bottom', color=palette[0])
+    if annotate_distributions:
+        x_anot_offset = 0. # negative when likelihood larger than prior
+        y_anot_offset = 1.4
+        ax.annotate('Prior', (mu_prior, 0.65), ha='center', va='bottom')
+        ax.annotate('safe', (mu_n1-x_anot_offset,y_anot_offset), ha='center', va='bottom', color=palette[3])
+        ax.annotate('risky', (mu_n2-x_anot_offset, y_anot_offset), ha='center', va='bottom', color=palette[0])
 
 
     # arrow
@@ -532,3 +535,43 @@ def plot_probit_curves(ax, s_c_small, s_c_large, sigma_c, sigma_x, mu_p, sigma_p
     ax.tick_params(labelsize=8)
     ax.legend(fontsize=8, loc='upper left')
     sns.despine(ax=ax)
+
+
+def save_posterior_params(idata, model, model_name, csv_path):
+    from bauer.core import RegressionModel
+    from bauer.utils.bayes import softplus
+    rows = []
+    for par in  model.free_parameters:
+        traces = idata.posterior[par+'_mu'].to_dataframe()
+        regressors_key = par + '_regressors'
+        if regressors_key in traces.index.names:
+            groups = traces.groupby(regressors_key)
+        else:
+            groups = [('Intercept', traces)]
+
+        for regressor, t in groups:
+            par_transform = model.free_parameters.get(par, {}).get('transform', 'identity') if par != 'rnp' else 'identity'
+            needs_softplus = (regressor == 'Intercept') and (('sd' in par) or (par == 'alpha' and isinstance(model, RegressionModel) and par_transform == 'softplus'))
+            if needs_softplus:
+                t = softplus(t)
+            #print(f"Parameter: {par}, Regressor: {regressor}, Mean: {t.mean().values[0]}, p-val: {(t > 0).mean().values[0]}, SD: {t.std().values[0]}")
+        
+            samples = t.copy()
+            rows.append({'model':  model_name,
+                'parameter': par,
+                'regressor': regressor,
+                **summarize_posterior(samples)})
+
+    df_new = pd.DataFrame(rows, columns=['model', 'parameter', 'regressor', 'mean', 'ci_low', 'ci_high', 'p_gt_0'])
+
+    # append to / update CSV
+    try:
+        df_existing = pd.read_csv(csv_path)
+        df_existing = df_existing[df_existing['model'] != model_name]
+        df_out = pd.concat([df_existing, df_new], ignore_index=True)
+    except FileNotFoundError:
+        df_out = df_new
+
+    df_out.to_csv(csv_path, index=False)
+    print(f"Saved {len(df_new)} parameters for '{model_name}' → {csv_path}")
+    return df_new

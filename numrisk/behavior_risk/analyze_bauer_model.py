@@ -14,13 +14,14 @@ from os import listdir, remove
 
 from utils import get_data
 from utils_02 import build_model, get_rnp
-from bauer.models import PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel, PowerLawEncodingRiskModel
+from bauer.models import PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel, PowerLawEncodingRiskModel, PowerLawEncodingRiskRegressionModel, FlexibleNoiseRiskModel
+from bauer.core import RegressionModel
 from bauer.utils.bayes import softplus as _softplus
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
 def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='symbolic',#col_wrap=5, AUC=False,E_dif=False, 
-        plot_traces=True,
+        plot_traces=False,
         remove_subjects = True, remove_sub_string = '32-40-45-46-50'):
 
     sns.set_context('talk')
@@ -68,7 +69,12 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='symbo
         for regressor, t in groups:
             t = t.copy()
             print(regressor, t)
-            if ('sd' in par) & (regressor == 'Intercept'): #  'risky_prior_std', 'safe_prior_std', 'n1_evidence_sd', 'n2_evidence_sd',
+            par_transform = model.free_parameters.get(par, {}).get('transform', 'identity') if par != 'rnp' else 'identity'
+            needs_softplus = (regressor == 'Intercept') and (
+                ('sd' in par) or
+                (par == 'alpha' and isinstance(model, RegressionModel) and par_transform == 'softplus')
+            )
+            if needs_softplus:
                 t = softplus(t)
 
             plt.figure()
@@ -95,7 +101,7 @@ def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='symbo
             plt.savefig(op.join(target_folder, f'group_par-{par}.{regressor}.pdf'), bbox_inches='tight')
             plt.close()
 
-    if isinstance(model, (PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel, PowerLawEncodingRiskModel)):
+    if isinstance(model, (PowerLawNoiseRiskRegressionModel, AffineNoiseRiskModel, PowerLawEncodingRiskModel, FlexibleNoiseRiskModel)):
         plot_sd_curves(idata, df, target_folder, model)
 
 
@@ -135,14 +141,36 @@ def _grp_encoding(post, x, key, alpha_grp):
     return sd_rep[:, None] / (alpha_grp[:, None] * x[None, :] ** (alpha_grp[:, None] - 1))
 
 
-def _sub_encoding(post, x, key):
+def _sub_encoding(post, x, key, alpha_needs_softplus=False):
     def _sub_mean(v):
         m = _flat(v).mean(axis=0)
         return m[..., 0] if m.ndim > 1 else m  # select Intercept only when regressors dim exists
 
-    alpha_s = _sub_mean(post['alpha'].values)
-    sd_s    = _softplus(_sub_mean(post[key].values))
+    alpha_raw = _sub_mean(post['alpha'].values)
+    alpha_s   = _softplus(alpha_raw) if alpha_needs_softplus else alpha_raw
+    sd_s      = _softplus(_sub_mean(post[key].values))
     return sd_s[:, None] / (alpha_s[:, None] * x[None, :] ** (alpha_s[:, None] - 1))
+
+
+def _grp_flexnoise(model, post, x, key):
+    """Group-level FlexNoise SD curve: (n_draws, len(x))."""
+    labels1, labels2 = model._get_evidence_sd_spline_par_labels()
+    base_labels = labels2 if 'n2' in key else labels1
+    mu_labels = [f'{l}_mu' for l in base_labels]
+    dm_var = key if key != 'evidence_sd' else 'n1_evidence_sd'
+    dm = model.make_dm(x=x, variable=dm_var)
+    pars = np.stack([_flat(post[l].values).ravel() for l in mu_labels], axis=1)
+    return _softplus(pars @ dm.T)
+
+
+def _sub_flexnoise(model, post, x, key):
+    """Per-subject mean FlexNoise SD curves: (n_subjects, len(x))."""
+    labels1, labels2 = model._get_evidence_sd_spline_par_labels()
+    labels = labels2 if 'n2' in key else labels1
+    dm_var = key if key != 'evidence_sd' else 'n1_evidence_sd'
+    dm = model.make_dm(x=x, variable=dm_var)
+    pars = np.stack([_flat(post[l].values).mean(axis=0) for l in labels], axis=1)
+    return _softplus(pars @ dm.T)
 
 
 def _draw_curves(x, curve_specs, ylabel, title, target_folder):
@@ -217,22 +245,43 @@ def plot_sd_curves(idata, df, target_folder, model):
 
     elif isinstance(model, PowerLawEncodingRiskModel):
         x = np.exp(np.linspace(np.log(n_min), np.log(n_max), 100))
-        alpha_grp = _intercept(post['alpha_mu'].values)
+        _alpha_transform = model.free_parameters.get('alpha', {}).get('transform', 'identity')
+        _alpha_raw = _intercept(post['alpha_mu'].values)
+        # RegressionModel stores raw (pre-softplus) values; BaseModel stores already-transformed values
+        alpha_grp = _softplus(_alpha_raw) if (isinstance(model, RegressionModel) and _alpha_transform == 'softplus') else _alpha_raw
         a_mean = float(alpha_grp.mean())
         title = f'PowerLawEncoding: r=nᵅ, const SD in rep-space,  α={a_mean:.2f}'
         if separate:
             curve_specs = [
                 (_grp_encoding(post, x, 'n1_evidence_sd', alpha_grp),
-                 _sub_encoding(post, x, 'n1_evidence_sd'), 'steelblue', 'safe (n1)'),
+                 _sub_encoding(post, x, 'n1_evidence_sd', _alpha_transform == 'softplus' and isinstance(model, RegressionModel)), 'steelblue', 'safe (n1)'),
                 (_grp_encoding(post, x, 'n2_evidence_sd', alpha_grp),
-                 _sub_encoding(post, x, 'n2_evidence_sd'), 'tomato',    'risky (n2)'),
+                 _sub_encoding(post, x, 'n2_evidence_sd', _alpha_transform == 'softplus' and isinstance(model, RegressionModel)), 'tomato',    'risky (n2)'),
             ]
         else:
             curve_specs = [
                 (_grp_encoding(post, x, 'evidence_sd', alpha_grp),
-                 _sub_encoding(post, x, 'evidence_sd'), 'steelblue', 'shared noise'),
+                 _sub_encoding(post, x, 'evidence_sd', _alpha_transform == 'softplus' and isinstance(model, RegressionModel)), 'steelblue', 'shared noise'),
             ]
         ylabel = 'Effective SD(n)'
+
+    elif isinstance(model, FlexibleNoiseRiskModel):
+        x = np.linspace(n_min, n_max, 100)
+        poly = model.polynomial_order
+        title = f'FlexNoise B-spline, order={poly}'
+        if separate:
+            curve_specs = [
+                (_grp_flexnoise(model, post, x, 'n1_evidence_sd'),
+                 _sub_flexnoise(model, post, x, 'n1_evidence_sd'), 'steelblue', 'safe (n1)'),
+                (_grp_flexnoise(model, post, x, 'n2_evidence_sd'),
+                 _sub_flexnoise(model, post, x, 'n2_evidence_sd'), 'tomato',    'risky (n2)'),
+            ]
+        else:
+            curve_specs = [
+                (_grp_flexnoise(model, post, x, 'evidence_sd'),
+                 _sub_flexnoise(model, post, x, 'evidence_sd'), 'steelblue', 'shared noise'),
+            ]
+        ylabel = 'σ(n)'
 
     else:
         return
@@ -247,7 +296,7 @@ if __name__ == '__main__':
     #parser.add_argument('--AUC', action='store_true')
     #parser.add_argument('--E_dif', action='store_true')
     parser.add_argument('--format', default='symbolic')
-    parser.add_argument('--no_trace', dest='plot_traces', action='store_false')
+    parser.add_argument('--trace', dest='plot_traces', action='store_true')
     parser.add_argument('--keep_all_subjects', action='store_false', dest='remove_subjects')
     parser.add_argument('--remove_sub_string', default='32-40-45-46-50') # default='32-40-45-46-50'
     args = parser.parse_args()

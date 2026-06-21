@@ -30,6 +30,7 @@ def cleanup_behavior(df_, drop_no_responses=True):
         df['log(risky/safe)'] = np.log(df['frac'])
 
         df['log(n1)'] = np.log(df['n1'])
+        df['rt'] = df_[('onset', 'choice')] - df_[('onset', 'stimulus')]
         
         if drop_no_responses:
             df = df[~df.chose_risky.isnull()]
