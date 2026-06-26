@@ -19,8 +19,13 @@ def get_subwise_params(idata, param_name, group_list=None):
 
     if group_list is not None:
         df_param = df_param.join(group_list, on='subject')
+        regressors = df_param.index.get_level_values('regressor').unique()
+        non_intercept = [r for r in regressors if r != 'Intercept']
+        if len(non_intercept) != 1:
+            raise ValueError(f"Expected exactly one non-Intercept regressor for {param_name}, got {list(non_intercept)}")
+        group_regressor = non_intercept[0]  # e.g. 'group' (old traces) or 'group[T.dyscalc]' (bauer v0.4.0 traces)
         df_param_int = df_param.xs('Intercept', 0,'regressor')
-        df_param_group = df_param.xs('group', 0,'regressor')
+        df_param_group = df_param.xs(group_regressor, 0,'regressor')
         df_result = df_param_int.copy()
         df_result.loc[df_result['group'] == 1] += df_param_group.loc[df_result['group'] == 1]
         df_param = df_result
