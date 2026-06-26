@@ -20,7 +20,12 @@ def main(model_label, burnin=3000, samples=2000, bids_folder = '/Users/mrenke/da
     df = get_data(bids_folder)
     df.reset_index('run', inplace=True) 
 
-    target_accept = 0.95
+    if 'DDM' in model_label: # for DDM models: drop trials with rt < 0.20 s
+         N_trials_before = len(df)
+         df = df[df['rt'] >= 0.20]
+         print(f'Dropped {N_trials_before - len(df)} trials with rt < 0.20 s')
+         
+    target_accept = 0.99
 
     model = build_model(model_label, df)
     model.build_estimation_model()

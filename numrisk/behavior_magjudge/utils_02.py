@@ -2,7 +2,7 @@ import os.path as op
 import os
 import numpy as np
 import pandas as pd
-from bauer.models import MagnitudeComparisonRegressionModel, FlexibleNoiseComparisonRegressionModel
+from bauer.models import DDMMagnitudeComparisonModel, MagnitudeComparisonRegressionModel, FlexibleNoiseComparisonRegressionModel, DDMMagnitudeComparisonRegressionModel
 
 #from stress_risk.utils.data import get_all_behavior
 import arviz as az
@@ -97,4 +97,23 @@ def build_model(model_label, df):
                                                         fit_prior=True,
                                                         polynomial_order=5,                                
                                                         memory_model='independent')
+    if model_label == 'DDM1Reg1':
+        model = DDMMagnitudeComparisonRegressionModel(df, 
+                                        regressors = {'perceptual_noise_sd':'group', 'memory_noise_sd':'group'},
+                                        fit_prior=False,
+                                        fit_seperate_evidence_sd = True, 
+                                        memory_model='shared_perceptual_noise',
+                                        )
+    if model_label == 'DDM0':
+        model = DDMMagnitudeComparisonModel(df, 
+                                        fit_prior=False,
+                                        fit_seperate_evidence_sd = True, 
+                                        memory_model='independent' # default
+                                        )
+    if model_label == 'DDM1':
+        model = DDMMagnitudeComparisonModel(df, 
+                                        fit_prior=False,
+                                        fit_seperate_evidence_sd = True, 
+                                        memory_model='shared_perceptual_noise',
+                                        )
     return model                              

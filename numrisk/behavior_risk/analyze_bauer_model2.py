@@ -16,18 +16,26 @@ import numpy as np
 import seaborn as sns
 from bauer.utils.bayes import softplus
 import pandas as pd
+from os import listdir, remove
 
-def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='non-symbolic', col_wrap=5):
+def main(model_label, bids_folder='/Users/mrenke/data/ds-dnumrisk',format='symbolic', col_wrap=5,
+        remove_subjects = True, remove_sub_string = '32-40-45-46-50'):
 
 # behav_fit3
 # does only work when executed via terminal, not in interactive shell of VSC
 
-    df = get_data(bids_folder)
+    subject_list = [f[4:] for f in listdir(bids_folder) if f[0:3] == 'sub' and len(f) == 6]
+    if remove_subjects:
+        remove_sub_list = [f'{int(s):02d}' for s in remove_sub_string.split('-')]
+        subject_list = [subject for subject in subject_list if subject not in remove_sub_list]
+    
+    df = get_data(bids_folder,subject_list)
     df = df.xs(format,0, level='format')
-
     model = build_model(model_label, df)
     model.build_estimation_model()
 
+    if remove_subjects:
+        model_label = f'{model_label}_rem-{remove_sub_string}'
     idata = az.from_netcdf(op.join(bids_folder, f'derivatives/cogmodels_risk/model-{model_label}_format-{format}_trace.netcdf'))
 
     target_folder = op.join(bids_folder, f'derivatives/cogmodels_risk/figures/{model_label}_format-{format}')
@@ -64,8 +72,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('model_label', default=None)
     parser.add_argument('--bids_folder', default='/Users/mrenke/data/ds-dnumrisk')
-    parser.add_argument('--format', default='non-symbolic')
+    parser.add_argument('--format', default='symbolic')
+    parser.add_argument('--keep_all_subjects', action='store_false', dest='remove_subjects')
+    parser.add_argument('--remove_sub_string', default='32-40-45-46-50') # default='32-40-45-46-50'
 
     args = parser.parse_args()
 
-    main(args.model_label, bids_folder=args.bids_folder,format=args.format)
+    main(args.model_label, bids_folder=args.bids_folder,format=args.format, remove_subjects=args.remove_subjects, remove_sub_string=args.remove_sub_string)
