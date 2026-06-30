@@ -35,7 +35,32 @@ def get_subwise_params(idata, param_name, group_list=None):
     df_param = df_param.rename(mapper={'value':param_name},axis=1)
     
     if 'sd' in param_name:
-        df_param[param_name]= softplus(df_param[param_name]) 
+        df_param[param_name]= softplus(df_param[param_name])
+    return df_param
+
+def get_subwise_params_cellmeans(idata, param_name, group_map):
+    """For cell-means traces (random_regressors={p: '0 + C(group)'}), e.g. the
+    dyscalculic_ddm choice/DDM/RDM fits in derivatives/cogmodels_magjudge.
+    Each subject's posterior has one entry per group level, but only the
+    level matching that subject's actual group is informed by their data
+    (the other is just the population prior) - so we have to pick it out
+    per subject rather than averaging both, as get_subwise_params does for
+    the reference-cell (Intercept + offset) design.
+
+    group_map: dict subject -> group label string, matching the
+    'C(group)[<label>]' regressor coordinates in idata.
+    """
+    da = idata.posterior[param_name]
+    regressor_dim = f'{param_name}_regressors'
+    values = {
+        sub: da.sel(subject=sub, **{regressor_dim: f'C(group)[{group_map[sub]}]'}).mean(dim=['chain', 'draw']).item()
+        for sub in da['subject'].values
+    }
+    df_param = pd.DataFrame.from_dict(values, orient='index', columns=[param_name])
+    df_param.index.name = 'subject'
+
+    if 'sd' in param_name:
+        df_param[param_name] = softplus(df_param[param_name])
     return df_param
 
 def build_model(model_label, df):
