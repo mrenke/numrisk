@@ -20,12 +20,17 @@ ADD_TABLES_DIR = '/Users/mrenke/data/ds-dnumrisk/add_tables'
 CONFIG = {
     'panamath_columns': ['weber_transformed'],  # ANS-acuity measure; drop raw weber_frac and percent_correct
     'vs_wm_columns': ['erfassungsspanne'],  # span score; drop overall_score and basisscore
-    'magjudge_bauer_variant': 'unbiased',  # 'biased' or 'unbiased' model fit
+    'magjudge_bauer_variant':'v4_rdm', #'v4_choice',  # see MAGJUDGE_BAUER_FILES for available variants
     # Default to the 3 DAN patches that showed group differences (control vs.
     # dyscalc) in poster_OHBM26.ipynb; pass columns=[...] for the others
     # ('L_temporal', 'R_frontal-lateral', 'R_temporal').
     'dan_patch_columns': ['L_frontal-lateral', 'L_parietal-lateral', 'R_parietal-lateral'],
-}
+    # corr_diff (stim2 - stim1) is the measure of interest — how much the
+    # neural-activation/gradient-3 correlation shifts between the two magjudge
+    # stimuli; corr_1/corr_2 (the per-stimulus correlations) are available via
+    # columns=['grad3_corr_stim1', 'grad3_corr_stim2', 'grad3_corr_diff'].
+    'grad3_betastim_columns': ['grad3_corr_diff', 'grad3_corr_stim1', 'grad3_corr_stim2'],
+    }
 
 
 def _load_participants(dir_=ADD_TABLES_DIR):
@@ -40,27 +45,26 @@ def _load_participants(dir_=ADD_TABLES_DIR):
 
 
 def _load_magjudge_probit(dir_=PHENOTYPE_DIR):
-    df = pd.read_csv(op.join(dir_, 'probit-2_all-subwise-params_appropSample.csv')).set_index('subject')
+    df = pd.read_csv(op.join(dir_, 'magjudge_probit-2_all-subwise-params.csv')).set_index('subject') # was '_appropSample' before!
     df = df.rename(columns={'gamma': 'gamma_magjudge', 'intercept': 'intercept_magjudge'})
     df['intercept_magjudge_abs'] = df['intercept_magjudge'].abs()
     return df
 
 
-def _load_magjudge_bauer(variant, dir_=PHENOTYPE_DIR, model_label=3, suffix_columns=True):
-    suffix = '_unbiased' if variant == 'unbiased' else ''
-    df = pd.read_csv(op.join(dir_, f'magjudge_bauer-{model_label}_sds{suffix}.csv')).set_index('subject')
+# filename per fitted model variant — add an entry here for any new bauer fit
+MAGJUDGE_BAUER_FILES = {
+    'biased': 'magjudge_bauer-3_sds.csv',
+    'unbiased': 'magjudge_bauer-3_sds_unbiased.csv',
+    'v4_choice': 'magjudge_bauerV4-choice_pm_hn_sds.csv',
+    'v4_rdm' : 'magjudge_bauerV4-rdm_full_cont_hn_sds.csv'
+}
+
+
+def _load_magjudge_bauer(variant, dir_=PHENOTYPE_DIR, suffix_columns=True):
+    df = pd.read_csv(op.join(dir_, MAGJUDGE_BAUER_FILES[variant])).set_index('subject')
     df = df.drop(columns=['group'], errors='ignore')
-    # same column names across variants (biased/unbiased) — suffix to compare them side by side if needed
+    # same column names across variants — suffix to compare them side by side if needed
     return df.add_suffix(f'_{variant}') if suffix_columns else df
-
-
-def _load_magjudge_bauer_biased(dir_=PHENOTYPE_DIR):
-    return _load_magjudge_bauer('biased', dir_)
-
-
-def _load_magjudge_bauer_unbiased(dir_=PHENOTYPE_DIR):
-    return _load_magjudge_bauer('unbiased', dir_)
-
 
 def _load_magjudge_bauer_default(dir_=PHENOTYPE_DIR, variant=None):
     variant = variant if variant is not None else CONFIG['magjudge_bauer_variant']
@@ -93,47 +97,53 @@ def _load_panamath(dir_=ADD_TABLES_DIR, columns=None):
 
 
 def _load_decode_r(dir_=PHENOTYPE_DIR):
-    return pd.read_csv(op.join(dir_, 'decoding_r.csv')).set_index('subject')
+    df = pd.read_csv(op.join(dir_, 'decoding_r.csv')).set_index('subject')
+    return df.rename(columns={'r': 'neural_numsense_precision'})
 
 
 def _load_npc_dispersion(dir_=PHENOTYPE_DIR):
     return pd.read_csv(op.join(dir_, 'NPC_dispersion_2D_final.csv')).set_index('subject').drop(columns=['group'])
 
 
-def _load_npc_pfm_net_area(dir_=PHENOTYPE_DIR):
+def _load_grad3_betastim(dir_=PHENOTYPE_DIR, columns=None):
+    df = pd.read_csv(op.join(dir_, 'grad3_betaStim-1-2_corr.csv')).set_index('subject')
+    df = df.rename(columns={'corr_1': 'grad3_corr_stim1', 'corr_2': 'grad3_corr_stim2',
+                             'corr_diff': 'grad3_corr_diff'})
+    columns = columns if columns is not None else CONFIG['grad3_betastim_columns']
+    return df[columns]
+
+
+def _load_npc_pfm_net_area(dir_=PHENOTYPE_DIR): 
+    # from parietal_patterns/nets_PFM/npc_net_ana.ipynb
     df = pd.read_csv(op.join(dir_, 'netsPFM_indArea_NPC.csv'))
     df = df.set_index(['subject', 'network']).unstack('network')
     df.columns = [f'{col[1]}_{col[0]}' for col in df.columns]
     return df
 
+def _load_risk_probit(dir_=PHENOTYPE_DIR):
+    df = pd.read_csv(op.join(dir_, 'risk_probit_format-symbolic_subwise_summary.csv')).set_index('subject')
+    df = df.rename(columns={'ind_point_map': 'risk_indPoint', 
+                            'ind_point_ss_slope': 'risk_indPoint_SSshift',
+                            'gamma_map': 'risk_gamma', 
+                            'gamma_ss_slope': 'risk_gamma_SSshift'})
+                            
+    return df.drop(columns='group_label')
 
-def _load_rnp(dir_=PHENOTYPE_DIR):
-    df = pd.read_csv(op.join(dir_, 'rnp_sub-format-wise.csv'))
-    df = df.set_index(['subject', 'format']).unstack('format')
-    df = df.droplevel(0, axis=1).rename(columns={'non-symbolic': 'rnp_nonsymb', 'symbolic': 'rnp_symb'})
-    return df
-
-
-def _load_ss_rnp_slope(dir_=PHENOTYPE_DIR):
-    df = pd.read_csv(op.join(dir_, 'risk_SS-RNP-subwise-MAPs_probit-2_format-symbolic.csv'))
-    return df.set_index('subject').rename(columns={'slope': 'ss_rnp_slope'})[['ss_rnp_slope']]
-
-
-def _load_risk_gammas(dir_=PHENOTYPE_DIR):
-    symb = pd.read_csv(op.join(dir_, 'probit_model-2_format-symbolic_gammas.csv')).set_index('subject').drop(
-        columns=['Unnamed: 0'], errors='ignore')
-    nonsymb = pd.read_csv(op.join(dir_, 'probit_model-2_format-non-symbolic_gammas.csv')).set_index('subject').drop(
-        columns=['Unnamed: 0'], errors='ignore')
-    df = symb.join(nonsymb, lsuffix='_symbolic', rsuffix='_nonsymbolic')
-    df['gamma_mean'] = df.mean(axis=1)
-    return df
+def _load_risk_bauer(dir_=PHENOTYPE_DIR):
+    df = pd.read_csv(op.join(dir_, 'risk_bauer_model-powerLawEncoding4_regression_format-symbolic.csv'))
+    return df.set_index('subject').rename(columns={'alpha': 'risk_alpha', 'n_asym_ev_sd': 'risk_evSD_asym'})[['risk_alpha', 'risk_evSD_asym']]
 
 
 def _load_eyetrack_dur_diff(format_='non-symbolic', dir_=PHENOTYPE_DIR):
-    return pd.read_csv(op.join(dir_, f'subwise_duration_option_difference_abs_{format_}.tsv')).set_index('subject')
+    df = pd.read_csv(op.join(dir_, f'subwise_duration_option_difference_abs_{format_}.tsv')).set_index('subject')
+    return df
 
+def _load_everydaylifeQ(dir_=PHENOTYPE_DIR):
+    df = pd.read_csv(op.join(dir_, 'everyday_life_numSituations_PCs.csv')).set_index('subject')
+    return df
 
 def _load_dan_patches(dir_=PHENOTYPE_DIR, columns=None, area_measure='ind_area'):
+    # from parietal_patterns/nets_PFM/npc_net_ana.ipynb
     df = pd.read_csv(op.join(dir_, 'netsPFM_DANpatches.csv'))
     df = df.rename(columns={'sub_id': 'subject'}).set_index(['subject', 'patch'])
     df = df[area_measure].unstack('patch') / 100  # convert to cm^2
@@ -149,17 +159,18 @@ REGISTRY = {
         'skill_score': 'behavioral_cognitive',       # test-based
         'anx_mean': 'behavioral_questionnaire',       # self-report
         'conf_mean': 'behavioral_questionnaire',      # self-report
-    }},
+        }},
+    'everydaylife_questionnaire': {'loader': _load_everydaylifeQ, 'category': 'behavioral_questionnaire'},
     'iq_scores': {'loader': _load_iq_scores, 'category': 'behavioral_cognitive'},
     'vs_wm': {'loader': _load_vs_wm, 'category': 'behavioral_cognitive'},
     'panamath': {'loader': _load_panamath, 'category': 'behavioral_cognitive'},
     'decode_r': {'loader': _load_decode_r, 'category': 'neural_encoding'},
     'npc_dispersion': {'loader': _load_npc_dispersion, 'category': 'neural_connectivity'},
+    'grad3_betastim': {'loader': _load_grad3_betastim, 'category': 'neural_gradient_activation'},
     'npc_pfm_net_area': {'loader': _load_npc_pfm_net_area, 'category': 'neural_connectivity'},
     'dan_patches': {'loader': _load_dan_patches, 'category': 'neural_connectivity'},
-    'rnp': {'loader': _load_rnp, 'category': 'behavioral_risk'},
-    'ss_rnp_slope': {'loader': _load_ss_rnp_slope, 'category': 'behavioral_risk'},
-    'risk_gammas': {'loader': _load_risk_gammas, 'category': 'behavioral_risk'},
+    'risk_probit': {'loader': _load_risk_probit, 'category': 'behavioral_risk'},
+    'risk_bauer': {'loader': _load_risk_bauer, 'category': 'behavioral_risk'},
     'eyetrack_dur_diff': {'loader': _load_eyetrack_dur_diff, 'category': 'behavioral_risk'},
 }
 
