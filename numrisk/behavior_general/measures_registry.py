@@ -30,6 +30,10 @@ CONFIG = {
     # stimuli; corr_1/corr_2 (the per-stimulus correlations) are available via
     # columns=['grad3_corr_stim1', 'grad3_corr_stim2', 'grad3_corr_diff'].
     'grad3_betastim_columns': ['grad3_corr_diff', 'grad3_corr_stim1', 'grad3_corr_stim2'],
+    # nPRF R2 mixture fit in NPC (see encoding_model r2 mixture): noise-component
+    # mean of the free ROI fit, plus signal mean / weight of the pinned fit
+    # (noise component pinned to the whole-brain estimate).
+    'npc_r2mixture_columns': ['roi_noise_mu', 'pinned_signal_mu', 'pinned_logit_w'],
     }
 
 
@@ -113,6 +117,15 @@ def _load_grad3_betastim(dir_=PHENOTYPE_DIR, columns=None):
     return df[columns]
 
 
+def _load_npc_r2mixture(dir_=PHENOTYPE_DIR, columns=None):
+    df = pd.read_csv(op.join(dir_, 'nPRF_r2mixture_group-dyscalculia_space-fsaverage5_roi-NPC.csv')).set_index('subject')
+    # not stored in the csv — logit of the pinned fit's signal weight (bounded at 1e-4 / 0.9999)
+    w = df['pinned_signal_weight']
+    df['pinned_logit_w'] = np.log(w / (1 - w))
+    columns = columns if columns is not None else CONFIG['npc_r2mixture_columns']
+    return df[columns]
+
+
 def _load_npc_pfm_net_area(dir_=PHENOTYPE_DIR): 
     # from parietal_patterns/nets_PFM/npc_net_ana.ipynb
     df = pd.read_csv(op.join(dir_, 'netsPFM_indArea_NPC.csv'))
@@ -165,6 +178,7 @@ REGISTRY = {
     'vs_wm': {'loader': _load_vs_wm, 'category': 'behavioral_cognitive'},
     'panamath': {'loader': _load_panamath, 'category': 'behavioral_cognitive'},
     'decode_r': {'loader': _load_decode_r, 'category': 'neural_encoding'},
+    'npc_r2mixture': {'loader': _load_npc_r2mixture, 'category': 'neural_encoding'},
     'npc_dispersion': {'loader': _load_npc_dispersion, 'category': 'neural_connectivity'},
     'grad3_betastim': {'loader': _load_grad3_betastim, 'category': 'neural_gradient_activation'},
     'npc_pfm_net_area': {'loader': _load_npc_pfm_net_area, 'category': 'neural_connectivity'},
